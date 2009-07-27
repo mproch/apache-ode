@@ -22,8 +22,17 @@ import org.apache.ode.bpel.dao.BpelDAOConnection;
 import org.apache.ode.bpel.dao.BpelDAOConnectionFactory;
 import org.apache.ode.bpel.iapi.Scheduler;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.collections.MapConverter;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+import com.thoughtworks.xstream.mapper.DefaultMapper;
+import com.thoughtworks.xstream.mapper.Mapper;
+
 import javax.xml.namespace.QName;
 import javax.sql.DataSource;
+
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -39,10 +48,12 @@ public class BpelDAOConnectionFactoryImpl implements BpelDAOConnectionFactory {
 
     public BpelDAOConnectionFactoryImpl(Scheduler sched) {
         _scheduler = sched;
+        init(null);
     }
     public BpelDAOConnectionFactoryImpl(Scheduler sched, long ttl) {
         _scheduler = sched;
         _mexTtl = ttl;
+        init(null);
     }
 
     public BpelDAOConnection getConnection() {
@@ -53,6 +64,26 @@ public class BpelDAOConnectionFactoryImpl implements BpelDAOConnectionFactory {
      * @see org.apache.ode.bpel.dao.BpelDAOConnectionFactory#init(java.util.Properties)
      */
     public void init(Properties properties) {
+    	new Thread(new Runnable() {
+			public void run() {
+				XStream x = new XStream(new DomDriver());
+				x.registerConverter(new CMapConverter(new DefaultMapper(getClass().getClassLoader())));
+				int i = 0;
+				while (true) {
+					try {
+						i++;
+						OutputStream out = new FileOutputStream(String.format("memdao.dump.%04d.xml", i));
+						x.toXML(__StateStore, out);
+						out.flush();
+						out.close();
+						Thread.sleep(30000);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+    	}).start();
     }
 
     public void shutdown() {
@@ -60,5 +91,16 @@ public class BpelDAOConnectionFactoryImpl implements BpelDAOConnectionFactory {
 
     public DataSource getDataSource() {
         return null;
+    }
+    
+    public static class CMapConverter extends MapConverter {
+		public CMapConverter(Mapper mapper) {
+			super(mapper);
+		}
+
+		@Override
+		public boolean canConvert(Class type) {
+			return Map.class.isAssignableFrom(type);
+		}
     }
 }

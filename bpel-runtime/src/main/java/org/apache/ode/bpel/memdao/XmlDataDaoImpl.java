@@ -33,7 +33,7 @@ import java.util.Properties;
  */
 class XmlDataDaoImpl extends DaoBaseImpl implements XmlDataDAO {
 
-    private Node _data;
+    private transient Node _data;
     private Properties _properties = new Properties();
     private ScopeDaoImpl _scope;
     private String _name;

@@ -58,7 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
 class BpelDAOConnectionImpl implements BpelDAOConnection {
     private static final Log __log = LogFactory.getLog(BpelDAOConnectionImpl.class);
 
-    private Scheduler _scheduler;
+    private transient Scheduler _scheduler;
     private Map<QName, ProcessDaoImpl> _store;
     private List<BpelEvent> _events = new LinkedList<BpelEvent>();
     long _mexTtl;

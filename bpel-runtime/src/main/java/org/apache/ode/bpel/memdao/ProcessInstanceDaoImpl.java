@@ -56,8 +56,8 @@ public class ProcessInstanceDaoImpl extends DaoBaseImpl implements ProcessInstan
     private short _previousState;
     private short _state;
     private Long _instanceId;
-    private ProcessDaoImpl _processDao;
-    private Object _soup;
+    private transient ProcessDaoImpl _processDao;
+    private transient Object _soup;
     private Map<Long, ScopeDAO> _scopes = new HashMap<Long, ScopeDAO>();
     private Map<String, List<ScopeDAO>> _scopesByName = new HashMap<String, List<ScopeDAO>>();
     private Map<String, byte[]> _messageExchanges = new HashMap<String, byte[]>();

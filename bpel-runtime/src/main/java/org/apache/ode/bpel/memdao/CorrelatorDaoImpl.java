@@ -38,7 +38,7 @@ class CorrelatorDaoImpl extends DaoBaseImpl implements CorrelatorDAO {
     private String _correlatorId;
     private List<MsgQueueEntry> _messages;
     private List<MessageRouteDaoImpl> _routes;
-    private BpelDAOConnectionImpl _conn;
+    private transient BpelDAOConnectionImpl _conn;
 
     CorrelatorDaoImpl(String correlatorId, BpelDAOConnectionImpl conn) {
         _messages = new ArrayList<MsgQueueEntry>();

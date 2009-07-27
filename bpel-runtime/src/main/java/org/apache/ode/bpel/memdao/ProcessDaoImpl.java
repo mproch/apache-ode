@@ -53,10 +53,10 @@ class ProcessDaoImpl extends DaoBaseImpl implements ProcessDAO {
     protected final Map<Long, Long> _instancesAge = new ConcurrentHashMap<Long, Long>();
     protected final Map<Integer, PartnerLinkDAO> _plinks = new ConcurrentHashMap<Integer, PartnerLinkDAO>();
     private Map<QName, ProcessDaoImpl> _store;
-    private BpelDAOConnectionImpl _conn;
+    private transient BpelDAOConnectionImpl _conn;
     private int _executionCount = 0;
     private Collection<Long> _instancesToRemove = new ConcurrentLinkedQueue<Long>();
-    private volatile long _lastRemoval = 0;
+    private static volatile long _lastRemoval = 0;
 
     private String _guid;
 
