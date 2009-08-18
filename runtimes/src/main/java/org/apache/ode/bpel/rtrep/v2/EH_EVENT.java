@@ -73,6 +73,8 @@ class EH_EVENT extends BpelJacobRunnable {
     /** Has a termination of this handler been requested. */
     private boolean _terminated;
     private boolean _childrenTerminated;
+    
+    private CorrelationKey _key = null;
 
     EH_EVENT(ParentScopeChannel psc,TerminationChannel tc, EventHandlerControlChannel ehc, OEventHandler.OEvent o, ScopeFrame scopeFrame) {
         _scopeFrame = scopeFrame;
@@ -124,22 +126,21 @@ class EH_EVENT extends BpelJacobRunnable {
                     getBpelRuntime().checkResourceRoute(_scopeFrame.resolve(_oevent.resource),
                             _oevent.messageExchangeId+_counter, pickResponseChannel, 0);
                 } else {
-                    CorrelationKey key;
                     PartnerLinkInstance pLinkInstance = _scopeFrame.resolve(_oevent.partnerLink);
                     if (_oevent.matchCorrelation == null) {
                         // Adding a route for opaque correlation. In this case correlation is done on "out-of-band" session id.
                         String sessionId = getBpelRuntime().fetchMySessionId(pLinkInstance);
-                        key = new CorrelationKey(-1, new String[] {sessionId});
+                        _key = new CorrelationKey(-1, new String[] {sessionId});
                     } else {
                         if (!getBpelRuntime().isCorrelationInitialized(_scopeFrame.resolve(_oevent.matchCorrelation))) {
                             throw new FaultException(_oevent.getOwner().constants.qnCorrelationViolation,"Correlation not initialized.");
                         }
-                        key = getBpelRuntime().readCorrelation(_scopeFrame.resolve(_oevent.matchCorrelation));
-                        assert key != null;
+                        _key = getBpelRuntime().readCorrelation(_scopeFrame.resolve(_oevent.matchCorrelation));
+                        assert _key != null;
                     }
 
                     selector =  new Selector(0,pLinkInstance,_oevent.operation.getName(),
-                            _oevent.operation.getOutput() == null, _oevent.messageExchangeId+_counter, key);
+                            _oevent.operation.getOutput() == null, _oevent.messageExchangeId+_counter, _key);
                     getBpelRuntime().select(pickResponseChannel, null, false, new Selector[] { selector} );
                 }
                 instance(new WAITING(pickResponseChannel, _scopeFrame, _counter));
@@ -235,7 +236,7 @@ class EH_EVENT extends BpelJacobRunnable {
                                         _oevent.messageExchangeId+_counter, _oevent.messageExchangeId+ehScopeFrame.scopeInstanceId);
                             } else {
                                 getBpelRuntime().associateEvent(_scopeFrame.resolve(_oevent.partnerLink), _oevent.operation.getName(),
-                                        _oevent.messageExchangeId+_counter, _oevent.messageExchangeId+ehScopeFrame.scopeInstanceId);
+                                        _key, _oevent.messageExchangeId+_counter);
                             }
 
                             if (_oevent.variable != null) {

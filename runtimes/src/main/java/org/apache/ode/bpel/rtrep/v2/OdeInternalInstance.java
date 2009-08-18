@@ -154,7 +154,7 @@ public interface OdeInternalInstance {
 	 * @return propertyValue - the value corresponding to the process property name.
 	 */
 	Node getProcessProperty(QName propertyName);
-    void associateEvent(PartnerLinkInstance plinkInstance, String opName, String mexRef, String scopeIid);
+    void associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef);
 
     void associateEvent(ResourceInstance resourceInstance, String mexRef, String scopeIid);
 

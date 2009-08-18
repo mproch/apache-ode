@@ -465,8 +465,8 @@ public class RuntimeInstanceImpl implements OdeInternalInstance, OdeRTInstance {
         _brc.sendEvent(evt);
     }
 
-    public void associateEvent(PartnerLinkInstance plinkInstance, String opName, String mexRef, String scopeIid) {
-        getORM().associateEvent(plinkInstance, opName, mexRef, scopeIid);
+    public void associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef) {
+        getORM().associateEvent(plinkInstance, opName, key, mexRef);
     }
 
     public void associateEvent(ResourceInstance resourceInstance, String mexRef, String scopeIid) {
@@ -649,7 +649,7 @@ public class RuntimeInstanceImpl implements OdeInternalInstance, OdeRTInstance {
      * @see org.apache.ode.bpel.engine.rapi.OdeInternalInstance#onMyRoleMessageExchange(java.lang.String, java.lang.String)
      */
     public void onSelectEvent(final String selectId, final String messageExchangeId, final int selectorIdx) {
-        getORM().associate(selectId, messageExchangeId);
+        getORM().associate(selectId, messageExchangeId, selectorIdx);
 
         _vpu.inject(new JacobRunnable() {
             private static final long serialVersionUID = 3168964409165899533L;
