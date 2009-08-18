@@ -73,6 +73,8 @@ class EH_EVENT extends BpelJacobRunnable {
     private boolean _terminated;
 
     private boolean _childrenTerminated;
+    
+    private CorrelationKey _key = null;
 
 
     EH_EVENT(ParentScopeChannel psc,TerminationChannel tc, EventHandlerControlChannel ehc, OEventHandler.OEvent o, ScopeFrame scopeFrame) {
