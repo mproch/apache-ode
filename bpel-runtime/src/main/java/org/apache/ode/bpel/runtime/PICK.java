@@ -129,6 +129,29 @@ class PICK extends ACTIVITY {
 
         instance(new WAITING(pickResponseChannel));
     }
+    
+    private CorrelationKey getCorrelationKey(OPickReceive.OnMessage onMessage) throws FaultException {
+        CorrelationKey key = null;
+        PartnerLinkInstance pLinkInstance = _scopeFrame.resolve(onMessage.partnerLink);
+        if (onMessage.matchCorrelation == null && !_opick.createInstanceFlag) {
+            // Adding a route for opaque correlation. In this case,
+            // correlation is on "out-of-band" session-id
+            String sessionId = getBpelRuntime().fetchMySessionId(pLinkInstance);
+            key = new CorrelationKey(-1, new String[] { sessionId });
+        } else if (onMessage.matchCorrelation != null) {
+            if (!getBpelRuntime().isCorrelationInitialized(
+                    _scopeFrame.resolve(onMessage.matchCorrelation))) {
+                // the following should really test if this is a "join" type correlation...
+                if (!_opick.createInstanceFlag)
+                    throw new FaultException(_opick.getOwner().constants.qnCorrelationViolation,
+                            "Correlation not initialized.");
+            } else {
+                key = getBpelRuntime().readCorrelation(_scopeFrame.resolve(onMessage.matchCorrelation));
+                assert key != null;
+            }
+        }
+        return key;
+    }
 
     /**
      * Resolves the correlation key from the given PartnerLinkInstance and a match type correlation(non-initiate or
@@ -302,7 +325,6 @@ class PICK extends ACTIVITY {
                     }
 
                     FaultData fault;
-                    initVariable(mexId, onMessage);
                     try {
                         VariableInstance vinst = _scopeFrame.resolve(onMessage.variable);
                         for (OScope.CorrelationSet cset : onMessage.initCorrelations) {
