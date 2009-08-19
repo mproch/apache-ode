@@ -172,81 +172,26 @@ class OutstandingRequestManager implements Serializable {
         throw new IllegalArgumentException(errmsg);
     }
 
-    /**
-     * Associate a message exchange with a registered receive/pick. This happens when a message corresponding to the
-     * receive/pick is received by the system.
-     * @param pickResponseChannel
-     * @param mexRef
-     */
-    void associate(String pickResponseChannel, String mexRef, int selectorIdx) {
-        if (__log.isTraceEnabled())
-            __log.trace(ObjectPrinter.stringifyMethodEnter("associate", new Object[] {
-                    "pickResponseChannel", pickResponseChannel,
-                    "mexRef", mexRef
-            }) );
-
-        SelectEntry entry = _byChannel.get(pickResponseChannel);
-        if (entry != null) {
-            associateBpel(pickResponseChannel, entry, mexRef, selectorIdx);
-            return;
-        }
-        
-        RestEntry restEntry = _byRestChannel.get(pickResponseChannel);
-        if (restEntry != null) {
-            associateRest(pickResponseChannel, restEntry, mexRef);
-            return;
-        }
-        
-        String errmsg = "INTERNAL ERROR: No ENTRY for RESPONSE CHANNEL " + pickResponseChannel;
-        __log.fatal(errmsg);
-        throw new IllegalArgumentException(errmsg);
-    }
-    
-    private void associateRest(String pickResponseChannel, RestEntry restEntry, String mexRef) {
-        if (restEntry.mexRef != null) {
-            String errmsg = "INTERNAL ERROR: Duplicate ASSOCIATION for CHANEL " + pickResponseChannel;
-            __log.fatal(errmsg);
-            throw new IllegalStateException(errmsg);
-        }
-        restEntry.mexRef = mexRef;
-    }
-    
-    private void associateBpel(String pickResponseChannel, SelectEntry entry, String mexRef, int selectIdx) {
-        if (entry.mexRef != null) {
-            String errmsg = "INTERNAL ERROR: Duplicate ASSOCIATION for CHANEL " + pickResponseChannel;
-            __log.fatal(errmsg);
-            throw new IllegalStateException(errmsg);
-        }
-        entry.mexRef = mexRef;
-        
-        Selector selector = entry.selectors[selectIdx];
-        ReplyIdTuple reply = new ReplyIdTuple(selector.plinkInstance, selector.opName, mexRef);
-        if (_byReply.containsKey(reply)) {
-            String errmsg = "INTERNAL ERROR: Duplicate ENTRY for REPLY " + reply;
-            __log.fatal(errmsg);
-            throw new IllegalStateException(errmsg);
-        }
-        
-        // remove all pending requests for this entry
-        while(_byRequest.values().remove(entry));
-        // create a pending reply
-        _byReply.put(reply, entry);
-    }
-
-    public void associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef) {
+    public boolean associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef, String mexDAO) {
         ReplyIdTuple reply = new ReplyIdTuple(plinkInstance, opName, mexRef);
         if (_byReply.containsKey(reply)) {
-            String errmsg = "INTERNAL ERROR: Duplicate ENTRY for REPLY " + reply;
-            __log.fatal(errmsg);
-            throw new IllegalStateException(errmsg);
+            return false;
         }
         
         RequestIdTuple rid = new RequestIdTuple(plinkInstance, opName, key);
         SelectEntry entry = _byRequest.get(rid);
+        if (entry.mexRef != null) {
+            String errmsg = "INTERNAL ERROR: Duplicate ASSOCIATION for ENTRY " + entry;
+            __log.fatal(errmsg);
+            throw new IllegalStateException(errmsg);
+        }
+        entry.mexRef = mexDAO;
+        
         // remove all pending requests for this entry
         while(_byRequest.values().remove(entry));
         // create a pending reply
         _byReply.put(reply, entry);
+        return true;
     }
 
     public void associateEvent(ResourceInstance resourceInstance, String method, String mexRef, String scopeIid) {
@@ -274,10 +219,10 @@ class OutstandingRequestManager implements Serializable {
 
         // TODO use reply id
         final ReplyIdTuple rid = new ReplyIdTuple(plinkInstnace,opName, mexId);
-        SelectEntry entry = _byRequest.get(rid);
+        SelectEntry entry = _byReply.get(rid);
         if (entry == null) {
             if (__log.isDebugEnabled()) {
-                __log.debug("==release: RID " + rid + " not found in " + _byRequest);
+                __log.debug("==release: RID " + rid + " not found in " + _byReply);
             }
             return null;
         }
@@ -343,17 +288,17 @@ class OutstandingRequestManager implements Serializable {
         /** Name of the operation. */
         String opName;
         /** Correlation key identifier. */
-        CorrelationKey key;
+        String key;
 
         /** Constructor. */
-        private RequestIdTuple(PartnerLinkInstance partnerLink, String opName, CorrelationKey key) {
+        private RequestIdTuple(PartnerLinkInstance partnerLink, String opName, CorrelationKey correlationKey) {
             this.partnerLink = partnerLink;
             this.opName = opName;
-            this.key = key;
+            this.key = correlationKey == null ? "" : correlationKey.toCanonicalString();
         }
 
         public int hashCode() {
-            return this.partnerLink.hashCode() ^ this.opName.hashCode() ^ (key == null ? "".hashCode() : key.hashCode());
+            return this.partnerLink.hashCode() ^ this.opName.hashCode() ^ key.hashCode();
         }
 
         public boolean equals(Object obj) {
