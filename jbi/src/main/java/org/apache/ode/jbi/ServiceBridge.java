@@ -22,7 +22,9 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ode.bpel.iapi.MessageExchange;
 import org.apache.ode.bpel.iapi.MyRoleMessageExchange;
+import org.apache.ode.bpel.iapi.PartnerRoleMessageExchange;
 
 /**
  * Base-class for classes providing JBI-ODE translation services. 
@@ -40,7 +42,7 @@ public class ServiceBridge {
      * @param jbiMex destination JBI message-exchange
      * @param odeMex source ODE message-exchange
      */
-    protected void copyMexProperties(javax.jbi.messaging.MessageExchange jbiMex, MyRoleMessageExchange odeMex) {
+    protected void copyMexProperties(javax.jbi.messaging.MessageExchange jbiMex, PartnerRoleMessageExchange odeMex) {
         for (String propName : odeMex.getPropertyNames()) {
             String val = odeMex.getProperty(propName);
             if (val != null) {
@@ -48,6 +50,12 @@ public class ServiceBridge {
                 __log.debug(jbiMex + ": set property " + propName + " = " + val);
             }
         }
+        
+    	{
+    		String v = "" + odeMex.getProperty(MessageExchange.PROPERTY_SEP_PARTNERROLE_SESSIONID) + "~" + odeMex.getProperty(MessageExchange.PROPERTY_SEP_MYROLE_SESSIONID);
+			jbiMex.setProperty(MessageExchange.SMX_CORRELATION_ID, v);
+			__log.debug(jbiMex + ": set property " + MessageExchange.SMX_CORRELATION_ID + " = " + v);
+    	}
     }
     
     /**
@@ -58,8 +66,8 @@ public class ServiceBridge {
      */
     @SuppressWarnings("unchecked")
     protected void copyMexProperties(MyRoleMessageExchange odeMex, javax.jbi.messaging.MessageExchange jbiMex) {
-        for (String propName : (Set<String>) jbiMex.getPropertyNames()) {
-            if (propName.startsWith("org.apache.ode")) {
+    	for (String propName : (Set<String>) jbiMex.getPropertyNames()) {
+        	if (propName.startsWith("org.apache.ode") ) {
                 // Handle ODE-specific properties
                 Object val = jbiMex.getProperty(propName);
                 if (val != null) {
@@ -72,6 +80,15 @@ public class ServiceBridge {
                 // TODO: Should we copy these?
             }
         }
+    	
+    	{
+    		String[] v = ("" + jbiMex.getProperty(MessageExchange.SMX_CORRELATION_ID)).split("~");
+    		if (v.length == 2) {
+                odeMex.setProperty(MessageExchange.PROPERTY_SEP_MYROLE_SESSIONID, v[0]);
+                odeMex.setProperty(MessageExchange.PROPERTY_SEP_PARTNERROLE_SESSIONID, v[1]);
+                __log.debug(odeMex + ": set SEP properties to " + v[0] + " " + v[1]);
+    		}
+     	}
     }
 
 

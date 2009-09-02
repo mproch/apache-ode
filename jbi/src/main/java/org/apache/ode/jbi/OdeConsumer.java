@@ -85,6 +85,9 @@ abstract class OdeConsumer extends ServiceBridge implements JbiMessageExchangePr
             jbiMex.setEndpoint(se);
             jbiMex.setService(se.getServiceName());
             jbiMex.setOperation(opname);
+            
+            copyMexProperties(jbiMex, odeMex);
+
         } catch (MessagingException e) {
             String errmsg = "Unable to create JBI message exchange for ODE message exchange " + odeMex;
             __log.error(errmsg, e);
