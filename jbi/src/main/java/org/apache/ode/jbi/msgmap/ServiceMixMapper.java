@@ -95,7 +95,7 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
                 __log.debug("no part data for " + part.getName() + " -- unrecognized.");
                 return Recognized.FALSE;
             }
-            if (part.getElementName() != null) {
+/*            if (part.getElementName() != null) {
                 Element child = DOMUtils.getFirstChildElement(pdata);
                 if (child == null) {
                     __log.debug("element part " + part.getName() + " does not contain element " + part.getElementName()
@@ -103,7 +103,7 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
                     return Recognized.FALSE;
                 }
 
-            }
+            }*/
         }
 
         return Recognized.TRUE;
