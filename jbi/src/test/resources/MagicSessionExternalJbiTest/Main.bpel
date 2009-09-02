@@ -56,6 +56,10 @@
          and expecting a callback -->
     <assign>
       <copy>
+        <from partnerLink="responderPartnerLink" endpointReference="myRole"/>
+        <to variable="dummy2" part="reply-to"/>
+      </copy>
+      <copy>
         <from>123</from>
         <to variable="dummy2" part="payload"/>
       </copy>

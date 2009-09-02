@@ -60,7 +60,8 @@
     </wsdl:message>
 
     <wsdl:message name="InitiateMessage">
-        <wsdl:part name="payload" element="tns:initiate"/>
+        <wsdl:part name="payload" type="xsd:string"/>
+        <wsdl:part name="reply-to" element="wsa:EndpointReference"/>
     </wsdl:message>
 
     <wsdl:message name="DoubleCallMessage">

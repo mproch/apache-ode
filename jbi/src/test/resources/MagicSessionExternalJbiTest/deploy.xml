@@ -37,8 +37,5 @@
 		<provide partnerLink="mainPartnerLink">
 			<service name="mws:MSResponderService" port="MSResponderPort"/>
 		</provide>
-		<invoke partnerLink="mainPartnerLink">
-			<service name="mws:MSMainService2" port="MSMainPort"/>
-		</invoke>
 	</process>
 </deploy>
