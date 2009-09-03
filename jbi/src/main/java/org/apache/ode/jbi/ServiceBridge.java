@@ -46,7 +46,7 @@ public class ServiceBridge {
      */
     protected void copyMexProperties(javax.jbi.messaging.MessageExchange jbiMex, PartnerRoleMessageExchange odeMex) {
         __log.debug(odeMex + ": pmex copyProperties");
-    	NormalizedMessage in = jbiMex.getMessage("in");
+        NormalizedMessage in = jbiMex.getMessage("in");
         for (String propName : odeMex.getPropertyNames()) {
             String val = odeMex.getProperty(propName);
             if (val != null) {
@@ -68,10 +68,10 @@ public class ServiceBridge {
     @SuppressWarnings("unchecked")
     protected void copyMexProperties(MyRoleMessageExchange odeMex, javax.jbi.messaging.MessageExchange jbiMex) {
         __log.debug(odeMex + ": mmex copyProperties");
-    	NormalizedMessage in = jbiMex.getMessage("in");
-    	for (String propName : (Set<String>) in.getPropertyNames()) {
+        NormalizedMessage in = jbiMex.getMessage("in");
+        for (String propName : (Set<String>) in.getPropertyNames()) {
             Object val = in.getProperty(propName);
-        	if (propName.startsWith("org.apache.ode") ) {
+            if (propName.startsWith("org.apache.ode") ) {
                 // Handle ODE-specific properties
                 if (val != null) {
                     String sval = val.toString();
