@@ -78,32 +78,36 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
             return Recognized.UNSURE;
         }
 
+        // servicemix-http has a (bad) habit of placing the SOAP body content directly in the normalized message.
+    	// We need to recognize it
+        if (op.getInput().getMessage().getParts().size() == 1) {
+        	Part part = (Part) op.getInput().getMessage().getParts().values().iterator().next();
+	        QName elementName = part.getElementName();
+	        if (elementName != null && elementName.getLocalPart().equals(msg.getLocalName())
+	                && elementName.getNamespaceURI().equals(msg.getNamespaceURI())) {
+	            return Recognized.TRUE;
+	        }
+        }
+
+        // Recognize RPC style message
         for (String pname : ((Set<String>) op.getInput().getMessage().getParts().keySet())) {
             Part part = op.getInput().getMessage().getPart(pname);
-            Element pdata = null;
-            // servicemix-http has a (bad) habit of placing the SOAP body content directly in the normalized message
-            QName elementName = part.getElementName();
-            if (elementName != null && elementName.getLocalPart().equals(msg.getLocalName())
-                    && elementName.getNamespaceURI().equals(msg.getNamespaceURI())) {
-                pdata = msg;
-            }
-            if (pdata == null) {
-                // with RPC semantic the body is wrapped by a partName which is same as bodyElementName
-                pdata = DOMUtils.findChildByName(msg, new QName(null, part.getName()));
-            }
+            // with RPC semantic the body is wrapped by a partName which is same as bodyElementName
+            Element pdata = DOMUtils.findChildByName(msg, new QName(null, part.getName()));
             if (pdata == null) {
                 __log.debug("no part data for " + part.getName() + " -- unrecognized.");
                 return Recognized.FALSE;
             }
-/*            if (part.getElementName() != null) {
+            if (part.getElementName() != null) {
+            	//When there's an element declaration for RPC style, it's wrapped inside part's data 
                 Element child = DOMUtils.getFirstChildElement(pdata);
-                if (child == null) {
+                if (child == null || !part.getElementName().equals(new QName(child.getNamespaceURI(), child.getLocalName()))) {
                     __log.debug("element part " + part.getName() + " does not contain element " + part.getElementName()
-                            + " -- unrecognized");
+                            + " inside -- unrecognized");
                     return Recognized.FALSE;
                 }
 
-            }*/
+            }
         }
 
         return Recognized.TRUE;
