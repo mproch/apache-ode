@@ -57,6 +57,7 @@ import javax.xml.namespace.QName;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -732,7 +733,7 @@ class ASSIGN extends ACTIVITY {
 		}
 
 		public Date getCurrentEventDateTime() {
-			return null;
+			return Calendar.getInstance().getTime(); 
 		}
     }
 

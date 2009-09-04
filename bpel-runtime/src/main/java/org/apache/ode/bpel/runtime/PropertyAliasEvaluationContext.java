@@ -19,6 +19,7 @@
 package org.apache.ode.bpel.runtime;
 
 import java.net.URI;
+import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.ode.bpel.common.FaultException;

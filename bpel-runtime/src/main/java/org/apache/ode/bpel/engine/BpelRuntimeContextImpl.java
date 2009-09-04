@@ -697,6 +697,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
 
         MessageExchangeDAO mexDao = _dao.getConnection().createMessageExchange(
                 MessageExchangeDAO.DIR_BPEL_INVOKES_PARTNERROLE);
+        mexDao.setCreateTime(getCurrentEventDateTime()); 
         mexDao.setStatus(MessageExchange.Status.NEW.toString());
         mexDao.setOperation(operation.getName());
         mexDao.setPortType(partnerLink.partnerLink.partnerRolePortType.getQName());
@@ -1454,7 +1455,10 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
 	}
 
 	public Date getCurrentEventDateTime() {
-		return _currentEventDateTime;
+		if (_currentEventDateTime == null)
+			return Calendar.getInstance().getTime();
+		else
+			return _currentEventDateTime; 
 	}
 
 	public void setCurrentEventDateTime(Date eventDateTime) {
