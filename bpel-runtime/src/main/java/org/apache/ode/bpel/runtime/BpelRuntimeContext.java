@@ -296,4 +296,5 @@ public interface BpelRuntimeContext {
 
 	QName getProcessQName();
 
+	Date getCurrentEventDateTime();
 }

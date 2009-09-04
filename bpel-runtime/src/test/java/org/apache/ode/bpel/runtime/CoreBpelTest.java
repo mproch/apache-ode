@@ -458,4 +458,10 @@ public class CoreBpelTest extends TestCase implements BpelRuntimeContext {
 		return null;
 	}
 
+	@Override
+	public Date getCurrentEventDateTime() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

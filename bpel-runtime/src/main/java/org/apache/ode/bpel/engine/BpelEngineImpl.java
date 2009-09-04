@@ -726,5 +726,16 @@ public class BpelEngineImpl implements BpelEngine {
 		}
 	}
 
+    public BpelProcess getNewestProcessByType(QName processType) {
+    	int v = -1;
+    	BpelProcess q = null;
+    	for (BpelProcess p : _activeProcesses.values()) {
+    		if (p.getProcessType().equals(processType) && v < p.getVersion()) {
+    			v = p.getVersion();
+    			q = p;
+    		}
+    	}
+    	return q;
+    }
 }
 

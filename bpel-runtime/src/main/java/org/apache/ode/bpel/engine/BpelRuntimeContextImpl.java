@@ -100,7 +100,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
     private static final Log __log = LogFactory.getLog(BpelRuntimeContextImpl.class);
 
     /** Data-access object for process instance. */
-    private ProcessInstanceDAO _dao;
+    protected ProcessInstanceDAO _dao;
 
     /** Process Instance ID */
     private final Long _iid;
@@ -113,9 +113,11 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
 
     private MyRoleMessageExchangeImpl _instantiatingMessageExchange;
 
-    private OutstandingRequestManager _outstandingRequests;
+    protected OutstandingRequestManager _outstandingRequests;
 
-    private BpelProcess _bpelProcess;
+    protected BpelProcess _bpelProcess;
+
+    private Date _currentEventDateTime;
 
     /** Five second maximum for continous execution. */
     private long _maxReductionTimeMs = 2000000;
@@ -408,7 +410,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         return _bpelProcess.getInitialMyRoleEPR(pLink.partnerLink).toXML().getDocumentElement();
     }
 
-    private PartnerLinkDAO fetchPartnerLinkDAO(PartnerLinkInstance pLink) {
+    protected PartnerLinkDAO fetchPartnerLinkDAO(PartnerLinkInstance pLink) {
         ScopeDAO scopeDAO = _dao.getScope(pLink.scopeInstanceId);
         return scopeDAO.getPartnerLink(pLink.partnerLink.getId());
     }
@@ -847,7 +849,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         }
     }
 
-    private void buildOutgoingMessage(MessageDAO message, Element outgoingElmt) {
+    protected void buildOutgoingMessage(MessageDAO message, Element outgoingElmt) {
         if (outgoingElmt == null) return;
         
         Document doc = DOMUtils.newDocument();
@@ -868,7 +870,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         message.setHeader(header);
     }
 
-    void execute() {
+    public void execute() {
         long maxTime = System.currentTimeMillis() + _maxReductionTimeMs;
         boolean canReduce = true;
         while (ProcessState.canExecute(_dao.getState()) && System.currentTimeMillis() < maxTime && canReduce) {
@@ -914,7 +916,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         }
     }
 
-    void inputMsgMatch(final String responsechannel, final int idx, MyRoleMessageExchangeImpl mex) {
+    public void inputMsgMatch(final String responsechannel, final int idx, MyRoleMessageExchangeImpl mex) {
         // if we have a message match, this instance should be marked
         // active if it isn't already
         if (_dao.getState() == ProcessState.STATE_READY) {
@@ -944,7 +946,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         });
     }
 
-    void timerEvent(final String timerResponseChannel) {
+    protected void timerEvent(final String timerResponseChannel) {
         // In case this is a pick event, we remove routes,
         // and cancel the outstanding requests.
         _dao.getProcess().removeRoutes(timerResponseChannel, _dao);
@@ -987,7 +989,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         invocationResponse(mex.getDAO().getMessageExchangeId(), mex.getDAO().getChannel());
     }
 
-    void invocationResponse(final String mexid, final String responseChannelId) {
+    public void invocationResponse(final String mexid, final String responseChannelId) {
         if (responseChannelId == null)
             throw new NullPointerException("Null responseChannelId");
         if (mexid == null)
@@ -1449,5 +1451,13 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
 
 	public QName getProcessQName() {
 		return _bpelProcess.getProcessType();
+	}
+
+	public Date getCurrentEventDateTime() {
+		return _currentEventDateTime;
+	}
+
+	public void setCurrentEventDateTime(Date eventDateTime) {
+		_currentEventDateTime = eventDateTime;
 	}
 }

@@ -57,6 +57,7 @@ import javax.xml.namespace.QName;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -728,6 +729,10 @@ class ASSIGN extends ACTIVITY {
 
 		public QName getProcessQName() {
 			return _ctx.getProcessQName();
+		}
+
+		public Date getCurrentEventDateTime() {
+			return null;
 		}
     }
 

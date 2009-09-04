@@ -50,6 +50,7 @@ import org.apache.ode.bpel.dao.ProcessDAO;
 import org.apache.ode.bpel.dao.ProcessInstanceDAO;
 import org.apache.ode.bpel.dao.ScopeDAO;
 import org.apache.ode.bpel.dao.XmlDataDAO;
+import org.apache.ode.bpel.engine.replayer.Replayer;
 import org.apache.ode.bpel.evt.ActivityEvent;
 import org.apache.ode.bpel.evt.BpelEvent;
 import org.apache.ode.bpel.evt.CorrelationEvent;
@@ -84,6 +85,8 @@ import org.apache.ode.bpel.o.OProcess;
 import org.apache.ode.bpel.pmapi.ActivityExtInfoListDocument;
 import org.apache.ode.bpel.pmapi.ActivityInfoDocument;
 import org.apache.ode.bpel.pmapi.EventInfoListDocument;
+import org.apache.ode.bpel.pmapi.GetCommunication;
+import org.apache.ode.bpel.pmapi.GetCommunicationResponseDocument;
 import org.apache.ode.bpel.pmapi.InstanceInfoDocument;
 import org.apache.ode.bpel.pmapi.InstanceInfoListDocument;
 import org.apache.ode.bpel.pmapi.InstanceManagement;
@@ -96,6 +99,9 @@ import org.apache.ode.bpel.pmapi.ProcessInfoListDocument;
 import org.apache.ode.bpel.pmapi.ProcessManagement;
 import org.apache.ode.bpel.pmapi.ProcessNotFoundException;
 import org.apache.ode.bpel.pmapi.ProcessingException;
+import org.apache.ode.bpel.pmapi.Replay;
+import org.apache.ode.bpel.pmapi.ReplayResponse;
+import org.apache.ode.bpel.pmapi.ReplayResponseDocument;
 import org.apache.ode.bpel.pmapi.ScopeInfoDocument;
 import org.apache.ode.bpel.pmapi.TActivityExtInfo;
 import org.apache.ode.bpel.pmapi.TActivityStatus;
@@ -1306,5 +1312,64 @@ public class ProcessAndInstanceManagementImpl implements InstanceManagement, Pro
         }
 
         return confs;
+    }
+
+    public ReplayResponseDocument replay(final Replay request) throws ManagementException {
+    	final Throwable[] e = new Throwable[1];
+    	try {
+    		ReplayResponseDocument response = _db.exec(new BpelDatabase.Callable<ReplayResponseDocument>() {
+				public ReplayResponseDocument run(BpelDAOConnection conn) throws Exception {
+					try {
+						ReplayResponse response = ReplayResponse.Factory.newInstance();
+				    	Replayer replayer = new Replayer();
+				    	List<Long> iids = replayer.replayInstances(request, _server.getEngine(), conn);
+				    	for (Long iid : iids) {
+				    		response.addRestoredIID(iid);
+				    	}
+				    	ReplayResponseDocument responseDoc = ReplayResponseDocument.Factory.newInstance();
+				    	responseDoc.setReplayResponse(response);
+				    	return responseDoc;
+					} catch (Throwable t) {
+						e[0] = t;
+						throw new Exception("", t);
+					}
+				}
+	    	});
+    		
+    		if (e[0] != null) {
+    			__log.debug("throwing pending exception");
+    			throw e[0];
+    		}
+    		return response;
+    	} catch (Throwable e2) {
+    		throw new ManagementException("", e2);
+    	}
+    }
+    
+    public GetCommunicationResponseDocument getCommunication(final GetCommunication request) throws ManagementException {
+    	final Throwable[] e = new Throwable[1];
+    	try {
+    		GetCommunicationResponseDocument response = _db.exec(new BpelDatabase.Callable<GetCommunicationResponseDocument>() {
+				public GetCommunicationResponseDocument run(BpelDAOConnection conn) throws Exception {
+			    	try {
+				    	Replayer replayer = new Replayer();
+		
+				    	GetCommunicationResponseDocument responseDoc = GetCommunicationResponseDocument.Factory.newInstance();
+				    	responseDoc.setGetCommunicationResponse(replayer.getCommunication(request, conn));
+				    	return responseDoc;
+			    	} catch (Throwable e2) {
+			    		e[0] = e2;
+			    		throw new Exception("", e2);
+			    	}
+				}
+	    	});
+    		if (e[0] != null) {
+    			__log.debug("throwing pending exception");
+    			throw e[0];
+    		}
+    		return response;
+    	} catch (Throwable e2) {
+    		throw new ManagementException("", e2);
+    	}
     }
 }

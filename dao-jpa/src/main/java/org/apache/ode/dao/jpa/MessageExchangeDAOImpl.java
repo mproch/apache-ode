@@ -376,4 +376,8 @@ public class MessageExchangeDAOImpl extends OpenJPADAO implements MessageExchang
     public void release() {
         // no-op for now, could be used to do some cleanup
     }
+
+	public void setCreateTime(Date createTime) {
+		_createTime = createTime;
+	}
 }

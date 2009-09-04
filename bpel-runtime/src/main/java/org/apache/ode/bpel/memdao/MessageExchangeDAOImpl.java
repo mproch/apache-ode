@@ -78,6 +78,10 @@ public class MessageExchangeDAOImpl extends DaoBaseImpl implements MessageExchan
 		return createTime;
 	}
 
+	public void setCreateTime(Date d) {
+		createTime = d;
+	}
+
 	public MessageDAO getRequest() {
 		return request;
 	}

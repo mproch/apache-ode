@@ -196,12 +196,11 @@ public class BpelProcess {
         return sb.toString();
     }
 
-    /**
-     * Entry point for message exchanges aimed at the my role.
-     *
-     * @param mex
-     */
-    void invokeProcess(MyRoleMessageExchangeImpl mex) {
+    public interface InvokeHandler {
+    	boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routingInfo, boolean createInstance);
+    }
+    
+    public void invokeProcess(MyRoleMessageExchangeImpl mex, InvokeHandler invokeHandler) {
         boolean routed = false;
 
         try {
@@ -232,15 +231,16 @@ public class BpelProcess {
 
                 if (mex.getStatus() != MessageExchange.Status.FAILURE) {
                     for (PartnerLinkMyRoleImpl.RoutingInfo routing : routings) {
-                        if (routing.messageRoute == null && createInstance) {
-                            // No route but we can create a new instance
-                            target.invokeNewInstance(mex, routing);
-                            routed = true;
-                        } else if (routing.messageRoute != null) {
-                            // Found a route, hitting it
-                            target.invokeInstance(mex, routing);
-                            routed = true;
-                        }
+                    	routed = routed || invokeHandler.invoke(target, routing, createInstance);
+//                        if (routing.messageRoute == null && createInstance) {
+//                            // No route but we can create a new instance
+//                            target.invokeNewInstance(mex, routing, currentEventDateTime);
+//                            routed = true;
+//                        } else if (routing.messageRoute != null) {
+//                            // Found a route, hitting it
+//                            target.invokeInstance(mex, routing, currentEventDateTime);
+//                            routed = true;
+//                        }
                     }
                 }
                 if (routed) {
@@ -254,25 +254,48 @@ public class BpelProcess {
                 // we save the routing on the last myrole
                 // actually the message queue should be attached to the instance instead of the correlator
                 targets.get(targets.size()-1).noRoutingMatch(mex, routings);
-            }
+            } else {
+	            // Now we have to update our message exchange status. If the <reply> was not hit during the
+	            // invocation, then we will be in the "REQUEST" phase which means that either this was a one-way
+	            // or a two-way that needs to delivery the reply asynchronously.
+	            if (mex.getStatus() == MessageExchange.Status.REQUEST) {
+	                mex.setStatus(MessageExchange.Status.ASYNC);
+	            }
 
-            // Now we have to update our message exchange status. If the <reply> was not hit during the
-            // invocation, then we will be in the "REQUEST" phase which means that either this was a one-way
-            // or a two-way that needs to delivery the reply asynchronously.
-            if (mex.getStatus() == MessageExchange.Status.REQUEST) {
-                mex.setStatus(MessageExchange.Status.ASYNC);
+	            markused();
             }
-
-            markused();
         } finally {
             _hydrationLatch.release(1);
         }
 
         // For a one way, once the engine is done, the mex can be safely released.
         // Sean: not really, if route is not found, we cannot delete the mex yet
-        if (mex.getPattern().equals(MessageExchange.MessageExchangePattern.REQUEST_ONLY) && routed) {
-            mex.release();
-        }
+        // rr: disabling for communication tracing
+//        if (mex.getPattern().equals(MessageExchange.MessageExchangePattern.REQUEST_ONLY) && routed) {
+//            mex.release();
+//        }
+    }
+    
+    /**
+     * Entry point for message exchanges aimed at the my role.
+     *
+     * @param mex
+     */
+    void invokeProcess(final MyRoleMessageExchangeImpl mex) {
+    	invokeProcess(mex, new InvokeHandler() {
+			public boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routing, boolean createInstance) {
+	              if (routing.messageRoute == null && createInstance) {
+		              // No route but we can create a new instance
+		              target.invokeNewInstance(mex, routing);
+		              return true;
+		          } else if (routing.messageRoute != null) {
+		              // Found a route, hitting it
+		              target.invokeInstance(mex, routing);
+		              return true;
+		          }
+	              return false;
+			}
+    	});
     }
 
     /** Several myroles can use the same service in a given process */
@@ -505,7 +528,7 @@ public class BpelProcess {
         }
     }
 
-    protected ProcessDAO getProcessDAO() {
+    public ProcessDAO getProcessDAO() {
         return _pconf.isTransient() ? _engine._contexts.inMemDao.getConnection().getProcess(_pid) : getEngine()._contexts.dao
                 .getConnection().getProcess(_pid);
     }
@@ -1097,5 +1120,9 @@ public class BpelProcess {
         }
 
         return timeout;
+    }
+
+    public int getVersion() {
+       	return Integer.parseInt(_pid.getLocalPart().substring(_pid.getLocalPart().lastIndexOf('-') + 1));
     }
 }

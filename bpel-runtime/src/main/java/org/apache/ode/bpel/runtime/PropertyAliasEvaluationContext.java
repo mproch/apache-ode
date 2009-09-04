@@ -19,6 +19,7 @@
 package org.apache.ode.bpel.runtime;
 
 import java.net.URI;
+import java.util.Date;
 
 import org.apache.ode.bpel.common.FaultException;
 import org.apache.ode.bpel.explang.EvaluationContext;
@@ -99,6 +100,10 @@ public class PropertyAliasEvaluationContext implements EvaluationContext {
     }
 
 	public Node getPropertyValue(QName propertyName) {
+		return null;
+	}
+
+	public Date getCurrentEventDateTime() {
 		return null;
 	}
 

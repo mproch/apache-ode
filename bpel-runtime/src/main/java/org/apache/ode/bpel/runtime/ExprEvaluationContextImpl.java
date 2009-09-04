@@ -19,6 +19,7 @@
 package org.apache.ode.bpel.runtime;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
@@ -154,4 +155,7 @@ public class ExprEvaluationContextImpl implements EvaluationContext {
 		return _native.getProcessQName();
 	}
 
+	public Date getCurrentEventDateTime() {
+		return _native.getCurrentEventDateTime();
+	}
 }
