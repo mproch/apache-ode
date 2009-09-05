@@ -15,9 +15,11 @@
  * limitations under the License.
  */
 package org.apache.ode.jbi;
+import org.junit.Ignore;
 
-public class HelloWorldJbiTest extends JbiTestBase {
-    public void testHelloWold() throws Exception {
+@Ignore
+public class CommunicationJbiTest extends JbiTestBase {
+    public void testCommunication() throws Exception {
         go();
     }
 }
