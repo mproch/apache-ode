@@ -232,15 +232,6 @@ public class BpelProcess {
                 if (mex.getStatus() != MessageExchange.Status.FAILURE) {
                     for (PartnerLinkMyRoleImpl.RoutingInfo routing : routings) {
                     	routed = routed || invokeHandler.invoke(target, routing, createInstance);
-//                        if (routing.messageRoute == null && createInstance) {
-//                            // No route but we can create a new instance
-//                            target.invokeNewInstance(mex, routing, currentEventDateTime);
-//                            routed = true;
-//                        } else if (routing.messageRoute != null) {
-//                            // Found a route, hitting it
-//                            target.invokeInstance(mex, routing, currentEventDateTime);
-//                            routed = true;
-//                        }
                     }
                 }
                 if (routed) {
