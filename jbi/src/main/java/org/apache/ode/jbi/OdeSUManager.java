@@ -220,7 +220,7 @@ public class OdeSUManager implements ServiceUnitManager {
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
-
+    
     Element elem = doc.createElement("component-task-result");
     doc.appendChild(elem);
     Element compNameElem = doc.createElement("component-name");
@@ -238,7 +238,7 @@ public class OdeSUManager implements ServiceUnitManager {
 
     // Why do I have to tell this thing the component name? It /knows/ the
     // component name....
-        compNameElem.appendChild(doc.createTextNode(_ode.getContext().getComponentName()));
+    compNameElem.appendChild(doc.createTextNode(_ode.getContext().getComponentName()));
 
     // And why on earth do I have to tell my caller the method he just
     // called?
