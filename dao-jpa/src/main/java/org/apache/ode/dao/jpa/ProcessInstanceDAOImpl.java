@@ -392,11 +392,11 @@ public class ProcessInstanceDAOImpl extends OpenJPADAO implements ProcessInstanc
         return new BPELDAOConnectionImpl(getEM());
     }
     
-	public Collection<String> getMessageExchangeIds() {
+    public Collection<String> getMessageExchangeIds() {
         Collection<String> c = new HashSet<String>();
         for (MessageExchangeDAO m : _messageExchanges) {
             c.add(m.getMessageExchangeId());
         }
-		return c;
-	}    
+        return c;
+    }    
 }
