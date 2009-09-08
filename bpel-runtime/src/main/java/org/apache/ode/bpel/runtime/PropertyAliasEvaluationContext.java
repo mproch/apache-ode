@@ -83,9 +83,9 @@ public class PropertyAliasEvaluationContext implements EvaluationContext {
         throw new InvalidProcessException("Process execution information not available in this context.");
     }
 
-	public QName getProcessQName() {
+    public QName getProcessQName() {
         throw new InvalidProcessException("Process execution information not available in this context.");
-	}
+    }
 
     public Node getPartData(Element message, Part part) throws FaultException {
         // TODO Auto-generated method stub
@@ -97,15 +97,15 @@ public class PropertyAliasEvaluationContext implements EvaluationContext {
     }
     
     public URI getBaseResourceURI() {
-    	return null;
+        return null;
     }
 
-	public Node getPropertyValue(QName propertyName) {
-		return null;
-	}
+    public Node getPropertyValue(QName propertyName) {
+        return null;
+    }
 
-	public Date getCurrentEventDateTime() {
-		return null;
-	}
+    public Date getCurrentEventDateTime() {
+        return null;
+    }
 
 }
