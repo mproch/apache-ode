@@ -166,8 +166,7 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
     }
 
     public void toODE(Message odeMsg, NormalizedMessage nmsMsg, javax.wsdl.Message msgdef) throws MessageTranslationException {
-        Element nms;
-        nms = parse(nmsMsg.getContent());
+        Element nms = parse(nmsMsg.getContent());
         boolean docLit = false;
 
         if (__log.isDebugEnabled()) {
