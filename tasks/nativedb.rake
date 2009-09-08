@@ -48,16 +48,16 @@ module NativeDB
           rm_rf task.name if File.exist?(task.name)
           Dir.mkdir(task.name)
           Buildr.ant(name) do |ant|
-            create_tables_sql = "#{task.name}/ode_tables.sql"
-            drop_tables_sql = "#{task.name}/drop_ode_tables.sql"
-            ant.get :src=>"http://release.intalio.com/m2repo/ci-resources/ode-schema-5.2.x/package/#{dbprops[:db]}/ode_tables.sql",
-                    :dest=> create_tables_sql
-            sqls = prepare_sqls(task, ant, [], :hib, dbprops[:db], drop_tables_sql, create_tables_sql)
-            
-            # Apply the sql scripts to the database
-            ant.sql :driver=>dbprops[:driver], :url=>dbprops[:url], :userid=>dbprops[:userid], :password=>dbprops[:password], :autocommit=>dbprops[:autocommit] do
-              sqls.each { |sql| ant.transaction :src=>sql }
-            end
+#            create_tables_sql = "#{task.name}/ode_tables.sql"
+#            drop_tables_sql = "#{task.name}/drop_ode_tables.sql"
+#ant.get :src=>"http://release.intalio.com/m2repo/ci-resources/ode-schema-5.2.x/package/#{dbprops[:db]}/ode_tables.sql",
+#                  :dest=> create_tables_sql
+#            sqls = prepare_sqls(task, ant, [], :hib, dbprops[:db], drop_tables_sql, create_tables_sql)
+#            
+#            # Apply the sql scripts to the database
+#            ant.sql :driver=>dbprops[:driver], :url=>dbprops[:url], :userid=>dbprops[:userid], :password=>dbprops[:password], :autocommit=>dbprops[:autocommit] do
+#              sqls.each { |sql| ant.transaction :src=>sql }
+#            end
             puts "Created(prepared) database: #{dbprops[:url]}."
           end
         end
