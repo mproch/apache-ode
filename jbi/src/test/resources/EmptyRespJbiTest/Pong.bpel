@@ -60,22 +60,6 @@
                 <from>concat($pongRequest.body/pong:text, ' pong')</from>
                 <to>$text</to>
             </copy>
-            <!-- initialize pongResponse -->
-            <copy>
-                <from>
-                    <literal>
-                        <pong:PongRequest>
-                            <pong:text/>
-                        </pong:PongRequest>
-                    </literal>
-                </from>
-                <to>$pongResponse.body</to>
-            </copy>
-            <!-- copy new text into pongResponse -->
-            <copy>
-                <from>$text</from>
-                <to>$pongResponse.body/pong:text</to>
-            </copy>
         </assign>
         
         <reply name="pongReply"

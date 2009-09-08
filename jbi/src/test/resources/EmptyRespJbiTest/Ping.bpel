@@ -92,29 +92,6 @@
                 partnerLink="PongPartnerLink"
                 portType="pong:PongPortType"/>
         
-        <assign name="assignPingResponse">
-            <copy>
-                <from>$pongResponse.body/pong:text</from>
-                <to>$text</to>
-            </copy>
-            <!-- initialize pingResponse -->
-            <copy>
-                <from>
-                    <literal>
-                        <ping:PingResponse>
-                            <ping:text/>
-                        </ping:PingResponse>
-                    </literal>
-                </from>
-                <to>$pingResponse.body</to>
-            </copy>
-            <!-- copy new text into pingResponse -->
-            <copy>
-                <from>$text</from>
-                <to>$pingResponse.body/ping:text</to>
-            </copy>
-        </assign>
-
         <reply name="pingReply"
                 partnerLink="PingPartnerLink"
                 portType="ping:PingPortType"

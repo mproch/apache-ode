@@ -150,7 +150,7 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
             return;
         }
 
-        if (msgdef.getParts().size() != 0 && (msgdef.getParts().size() > 1 || ((Part) msgdef.getParts().values().iterator().next()).getElementName() == null)) {
+        if (msgdef.getParts().size() != 1 || ((Part) msgdef.getParts().values().iterator().next()).getElementName() == null) {
             // If we have more than one part, or a single non-element part, then we can't use the standard
             // NMS doc-lit like convention. Instead we place the entire message on the bus and hope for the
             // best.
@@ -166,7 +166,8 @@ public class ServiceMixMapper extends BaseXmlMapper implements Mapper {
     }
 
     public void toODE(Message odeMsg, NormalizedMessage nmsMsg, javax.wsdl.Message msgdef) throws MessageTranslationException {
-        Element nms = parse(nmsMsg.getContent());
+        Element nms;
+        nms = parse(nmsMsg.getContent());
         boolean docLit = false;
 
         if (__log.isDebugEnabled()) {

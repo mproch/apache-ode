@@ -49,7 +49,6 @@
     </message>
 
     <message name="PingResponse">
-        <part name="body" element="tns:PingResponse"/>
     </message>
 
     <portType name="PingPortType">

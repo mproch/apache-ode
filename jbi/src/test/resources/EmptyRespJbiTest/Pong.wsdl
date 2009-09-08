@@ -49,7 +49,6 @@
     </message>
 
     <message name="PongResponse">
-        <part name="body" element="tns:PongResponse"/>
     </message>
 
     <portType name="PongPortType">
