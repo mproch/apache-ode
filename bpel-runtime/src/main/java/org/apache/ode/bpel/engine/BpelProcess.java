@@ -197,7 +197,7 @@ public class BpelProcess {
     }
 
     public interface InvokeHandler {
-    	boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routingInfo, boolean createInstance);
+        boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routingInfo, boolean createInstance);
     }
     
     public void invokeProcess(MyRoleMessageExchangeImpl mex, InvokeHandler invokeHandler) {
@@ -231,7 +231,7 @@ public class BpelProcess {
 
                 if (mex.getStatus() != MessageExchange.Status.FAILURE) {
                     for (PartnerLinkMyRoleImpl.RoutingInfo routing : routings) {
-                    	routed = routed || invokeHandler.invoke(target, routing, createInstance);
+                        routed = routed || invokeHandler.invoke(target, routing, createInstance);
                     }
                 }
                 if (routed) {
@@ -246,14 +246,14 @@ public class BpelProcess {
                 // actually the message queue should be attached to the instance instead of the correlator
                 targets.get(targets.size()-1).noRoutingMatch(mex, routings);
             } else {
-	            // Now we have to update our message exchange status. If the <reply> was not hit during the
-	            // invocation, then we will be in the "REQUEST" phase which means that either this was a one-way
-	            // or a two-way that needs to delivery the reply asynchronously.
-	            if (mex.getStatus() == MessageExchange.Status.REQUEST) {
-	                mex.setStatus(MessageExchange.Status.ASYNC);
-	            }
+                // Now we have to update our message exchange status. If the <reply> was not hit during the
+                // invocation, then we will be in the "REQUEST" phase which means that either this was a one-way
+                // or a two-way that needs to delivery the reply asynchronously.
+                if (mex.getStatus() == MessageExchange.Status.REQUEST) {
+                    mex.setStatus(MessageExchange.Status.ASYNC);
+                }
 
-	            markused();
+                markused();
             }
         } finally {
             _hydrationLatch.release(1);
@@ -272,20 +272,20 @@ public class BpelProcess {
      * @param mex
      */
     void invokeProcess(final MyRoleMessageExchangeImpl mex) {
-    	invokeProcess(mex, new InvokeHandler() {
-			public boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routing, boolean createInstance) {
-	              if (routing.messageRoute == null && createInstance) {
-		              // No route but we can create a new instance
-		              target.invokeNewInstance(mex, routing);
-		              return true;
-		          } else if (routing.messageRoute != null) {
-		              // Found a route, hitting it
-		              target.invokeInstance(mex, routing);
-		              return true;
-		          }
-	              return false;
-			}
-    	});
+        invokeProcess(mex, new InvokeHandler() {
+            public boolean invoke(PartnerLinkMyRoleImpl target, PartnerLinkMyRoleImpl.RoutingInfo routing, boolean createInstance) {
+                  if (routing.messageRoute == null && createInstance) {
+                      // No route but we can create a new instance
+                      target.invokeNewInstance(mex, routing);
+                      return true;
+                  } else if (routing.messageRoute != null) {
+                      // Found a route, hitting it
+                      target.invokeInstance(mex, routing);
+                      return true;
+                  }
+                  return false;
+            }
+        });
     }
 
     /** Several myroles can use the same service in a given process */
@@ -911,7 +911,7 @@ public class BpelProcess {
              * exists and matches the GUID.
              */
             if (isInMemory()) {
-            	createProcessDAO(_engine._contexts.inMemDao.getConnection(), _pid, _pconf.getVersion(), _oprocess);
+                createProcessDAO(_engine._contexts.inMemDao.getConnection(), _pid, _pconf.getVersion(), _oprocess);
             } else if (_engine._contexts.scheduler.isTransacted()) {
                 // If we have a transaction, we do this in the current transaction
                 if(__log.isDebugEnabled()) __log.debug("Creating new process DAO for " + _pid + " (guid=" + _oprocess.guid + ")...");
@@ -1113,6 +1113,6 @@ public class BpelProcess {
     }
 
     public int getVersion() {
-       	return Integer.parseInt(_pid.getLocalPart().substring(_pid.getLocalPart().lastIndexOf('-') + 1));
+        return Integer.parseInt(_pid.getLocalPart().substring(_pid.getLocalPart().lastIndexOf('-') + 1));
     }
 }
