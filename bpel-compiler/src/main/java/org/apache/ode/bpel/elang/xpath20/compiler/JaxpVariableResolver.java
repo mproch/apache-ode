@@ -65,7 +65,7 @@ public class JaxpVariableResolver implements XPathVariableResolver {
             if ("pid".equals(variableName.getLocalPart()) || "processQName".equals(variableName.getLocalPart()))
                 return "";
             if ("currentEventDateTime".equals(variableName.getLocalPart())) 
-            	return new Date(1L);
+                return new Date(1L);
         }
 
         try {
