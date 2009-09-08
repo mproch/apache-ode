@@ -20,6 +20,7 @@
 <beans xmlns:sm="http://servicemix.apache.org/config/1.0"
        xmlns:http="http://servicemix.apache.org/http/1.0"
        xmlns:eip="http://servicemix.apache.org/eip/1.0"
+       xmlns:ping="urn:/Ping.wsdl"
        xmlns:pong="urn:/Pong.wsdl"
        xmlns:util="http://www.springframework.org/schema/util"
        >
@@ -60,6 +61,26 @@
 			  </eip:content-based-router>
                         </eip:endpoints>
                     </eip:component>
+                </sm:component>
+            </sm:activationSpec>
+            <sm:activationSpec id="pingpong-http">
+                <sm:component>
+                    <http:component>
+                        <http:endpoints>
+                            <http:endpoint 
+                                service="ping:PingService"
+                                endpoint="http" 
+				targetService="ping:PingService"
+				targetEndpoint="PingPort"
+                                defaultOperation="Ping"
+                                role="consumer"
+                                locationURI="http://localhost:8192/PingHttp/"
+                                defaultMep="http://www.w3.org/2004/08/wsdl/in-out" 
+				wsdlResource="classpath:EmptyRespJbiTest/Ping.wsdl"
+				soapVersion="1.1"
+                                soap="true" />
+                        </http:endpoints>
+                    </http:component>
                 </sm:component>
             </sm:activationSpec>
         </sm:activationSpecs>
