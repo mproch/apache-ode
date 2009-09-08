@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Licensed to the Apache Software Foundation (ASF) under one
   ~ or more contributor license agreements.  See the NOTICE file
@@ -17,14 +18,25 @@
   ~ under the License.
   -->
 <deploy xmlns="http://www.apache.org/ode/schemas/dd/2007/03"
-        xmlns:pns="urn:/HeaderTest.bpel"
-        xmlns:sns="urn:/HelloWorld2.wsdl" >
+        xmlns:pingProcess="urn:/Ping.bpel"
+        xmlns:pongProcess="urn:/Pong.bpel"
+        xmlns:ping="urn:/Ping.wsdl"
+        xmlns:pong="urn:/Pong.wsdl">
 
-
-	<process name="pns:HelloWorld2">
+	<process name="pingProcess:Ping">
 		<active>true</active>
-		<provide partnerLink="helloPartnerLink">
-			<service name="sns:HelloService" port="HelloPort"/>
+		<provide partnerLink="PingPartnerLink">
+			<service name="ping:PingService" port="PingPort"/>
+		</provide>
+		<invoke partnerLink="PongPartnerLink">
+			<service name="pong:PongServiceFwd" port="PongPort"/>
+		</invoke>
+	</process>
+	<process name="pongProcess:Pong">
+		<active>true</active>
+		<provide partnerLink="PongPartnerLink">
+			<service name="pong:PongService" port="PongPort"/>
 		</provide>
 	</process>
+    
 </deploy>

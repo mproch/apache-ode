@@ -20,7 +20,7 @@
 <beans xmlns:sm="http://servicemix.apache.org/config/1.0"
        xmlns:http="http://servicemix.apache.org/http/1.0"
        xmlns:eip="http://servicemix.apache.org/eip/1.0"
-       xmlns:hello="urn:/HelloWorld2.wsdl"
+       xmlns:pong="urn:/Pong.wsdl"
        xmlns:util="http://www.springframework.org/schema/util"
        >
 
@@ -45,20 +45,21 @@
         depends-on="jndi"
         >
         <sm:activationSpecs>
-            <sm:activationSpec id="hello-http">
+            <sm:activationSpec id="pingpong-eip">
                 <sm:component>
-                    <http:component>
-                        <http:endpoints>
-                            <http:endpoint 
-                                service="hello:HelloService"
-                                endpoint="http" 
-                                defaultOperation="Hello"
-                                role="consumer" 
-                                locationURI="http://localhost:8192/HelloHttp/"
-                                defaultMep="http://www.w3.org/2004/08/wsdl/in-out" 
-                                soap="true" />
-                        </http:endpoints>
-                    </http:component>
+                    <eip:component>
+                        <eip:endpoints>
+			  <eip:content-based-router service="pong:PongServiceFwd" endpoint="PongPort" forwardOperation="true">
+			    <eip:rules>
+			      <eip:routing-rule>
+				<eip:target>
+				  <eip:exchange-target service="pong:PongService"/>
+				</eip:target>
+			      </eip:routing-rule>
+			    </eip:rules>
+			  </eip:content-based-router>
+                        </eip:endpoints>
+                    </eip:component>
                 </sm:component>
             </sm:activationSpec>
         </sm:activationSpecs>

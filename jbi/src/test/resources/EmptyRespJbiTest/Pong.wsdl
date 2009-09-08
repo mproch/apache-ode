@@ -17,24 +17,24 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<definitions name="Hello"
-        targetNamespace="urn:/HelloWorld2.wsdl"
-        xmlns:tns="urn:/HelloWorld2.wsdl"
+<definitions name="Pong"
+        targetNamespace="urn:/Pong.wsdl"
+        xmlns:tns="urn:/Pong.wsdl"
         xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
         xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
         xmlns="http://schemas.xmlsoap.org/wsdl/">
 
     <types>
-        <schema targetNamespace="urn:/HelloWorld2.wsdl"
+        <schema targetNamespace="urn:/Pong.wsdl"
                 xmlns="http://www.w3.org/2000/10/XMLSchema">
-            <element name="HelloRequest">
+            <element name="PongRequest">
                 <complexType>
                     <all>
                         <element name="text" type="string"/>
                     </all>
                 </complexType>
             </element>
-            <element name="HelloResponse">
+            <element name="PongResponse">
                 <complexType>
                     <all>
                         <element name="text" type="string"/>
@@ -44,30 +44,31 @@
         </schema>
     </types>
 
-    <message name="HelloRequest">
-        <part name="body" element="tns:HelloRequest"/>
+    <message name="PongRequest">
+        <part name="body" element="tns:PongRequest"/>
     </message>
 
-    <message name="HelloResponse">
+    <message name="PongResponse">
+        <part name="body" element="tns:PongResponse"/>
     </message>
 
-    <portType name="HelloPortType">
-        <operation name="Hello">
-            <input message="tns:HelloRequest"/>
-            <output message="tns:HelloResponse"/>
+    <portType name="PongPortType">
+        <operation name="Pong">
+            <input message="tns:PongRequest"/>
+            <output message="tns:PongResponse"/>
         </operation>
     </portType>
 
-    <plnk:partnerLinkType name="HelloPartnerLinkType">
-        <plnk:role name="Provider" portType="tns:HelloPortType"/>
+    <plnk:partnerLinkType name="PongPartnerLinkType">
+        <plnk:role name="Provider" portType="tns:PongPortType"/>
     </plnk:partnerLinkType>
     
     <!--
     
     This is an abstract interface/portType definition.  Note the lack of 
-    binding and service: these are defined by the HTTP binding component.
-    See HelloWorld2-http/HelloWorld2.wsdl for details.
-    
+    binding and service.  Since Pong is only exposed on the JBI bus, the
+    JBI endpoint is defined in Pong.dd.
+
     -->
 
 </definitions>
