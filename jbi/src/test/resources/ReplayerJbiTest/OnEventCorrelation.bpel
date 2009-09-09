@@ -93,7 +93,7 @@
       </bpws:sequence>
     </bpws:while>
         
-    <bpws:receive createInstance="no" operation="initiate" partnerLink="client" portType="tns:OnEventCorrelation" variable="input" messageExchange="mex4">
+    <bpws:receive createInstance="no" operation="complete" partnerLink="client" portType="tns:OnEventCorrelation" variable="input" messageExchange="mex4">
           <bpws:correlations>
             <bpws:correlation initiate="no" set="CorrelationSet"/>
           </bpws:correlations>
@@ -104,7 +104,7 @@
             <bpws:to>$output.payload2</bpws:to>
           </bpws:copy>
         </bpws:assign>
-        <bpws:reply operation="initiate" partnerLink="client" variable="output" messageExchange="mex4"/>
+        <bpws:reply operation="complete" partnerLink="client" variable="output" messageExchange="mex4"/>
     
     <bpws:receive createInstance="no" operation="initiate" partnerLink="client" portType="tns:OnEventCorrelation" variable="input" messageExchange="mex3">
           <bpws:correlations>

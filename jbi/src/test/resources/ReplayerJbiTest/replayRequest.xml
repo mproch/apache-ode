@@ -48,7 +48,7 @@
                <type>M</type>
                <createTime>2009-04-01T16:41:40.873+02:00</createTime>
                <service xmlns:sam="http://sample.bpel.org/bpel/sample">sam:OnEventCorrelationInit</service>
-               <operation>initiate</operation>
+               <operation>complete</operation>
                <in>
                   <initiate xmlns:sam="http://sample.bpel.org/bpel/sample" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns="">
                      <payload>abc7</payload>
