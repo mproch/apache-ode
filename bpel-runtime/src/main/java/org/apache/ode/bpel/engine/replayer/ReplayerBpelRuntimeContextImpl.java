@@ -26,8 +26,10 @@ import org.apache.ode.bpel.engine.MyRoleMessageExchangeImpl;
 import org.apache.ode.bpel.engine.PartnerLinkMyRoleImpl;
 import org.apache.ode.bpel.engine.BpelProcess.InvokeHandler;
 import org.apache.ode.bpel.engine.PartnerLinkMyRoleImpl.RoutingInfo;
+import org.apache.ode.bpel.iapi.MessageExchange;
 import org.apache.ode.bpel.iapi.MessageExchange.MessageExchangePattern;
 import org.apache.ode.bpel.iapi.MessageExchange.Status;
+import org.apache.ode.bpel.pmapi.ExchangeType;
 import org.apache.ode.bpel.pmapi.CommunicationType.Exchange;
 import org.apache.ode.bpel.runtime.PROCESS;
 import org.apache.ode.bpel.runtime.PartnerLinkInstance;
@@ -76,7 +78,27 @@ public class ReplayerBpelRuntimeContextImpl extends BpelRuntimeContextImpl {
 		__log.debug("invoke");
 
 		Exchange answer = replayerContext.answers.fetchAnswer(partnerLink.partnerLink.partnerRolePortType.getQName(), operation.getName());
-        
+
+		if (messageHasChanged(outgoingMessage, answer)) {
+			//invoke with new data, previous invoke needs to be compensate
+			__log.debug("data has changed, invoke with new data");
+			return super.invoke(aid, partnerLink, operation, outgoingMessage, channel);
+		}
+		
+		if (answer.getType() == ExchangeType.S) {
+			__log.debug("synchronize with CPC partner");
+			return synchronizeInvoke(aid, partnerLink, operation, outgoingMessage, channel, answer);
+		} 
+		
+		__log.debug("do not synchronize, replay invoke");
+		return replayInvoke(aid, partnerLink, operation, outgoingMessage, channel, answer);
+		
+	}
+	
+	private String replayInvoke(int aid, PartnerLinkInstance partnerLink, Operation operation,
+			Element outgoingMessage, InvokeResponseChannel channel, Exchange answer)
+			throws FaultException {
+		
         PartnerLinkDAO plinkDAO = fetchPartnerLinkDAO(partnerLink);
         
         MessageExchangeDAO mexDao = _dao.getConnection().createMessageExchange(
@@ -136,6 +158,21 @@ public class ReplayerBpelRuntimeContextImpl extends BpelRuntimeContextImpl {
         }
         
 		return mexDao.getMessageExchangeId();
+	}
+
+
+	private String synchronizeInvoke(int aid, PartnerLinkInstance partnerLink,
+			Operation operation, Element outgoingMessage,
+			InvokeResponseChannel channel, Exchange answer) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	private boolean messageHasChanged(Element outgoingMessage, Exchange answer) {
+		// TODO Auto-generated method stub
+		// don't forget to treat case when answer is null, then return false
+		return false;
 	}
 
 

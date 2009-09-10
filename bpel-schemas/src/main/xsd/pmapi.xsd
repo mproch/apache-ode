@@ -37,6 +37,7 @@
         <restriction base="string">
             <enumeration value="M"/>
             <enumeration value="P"/>
+            <enumeration value="S"/>
         </restriction>
     </simpleType>
 
@@ -44,6 +45,7 @@
         <restriction base="string">
             <enumeration value="MOCK"/>
             <enumeration value="IGNORE"/>
+            <enumeration value="SYNC"/>
         </restriction>
     </simpleType>
     
