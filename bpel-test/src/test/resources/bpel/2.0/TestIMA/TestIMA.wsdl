@@ -18,8 +18,8 @@
     ~ under the License.
 -->
 <definitions name="TestIMA"
-        targetNamespace="http://sample.bpel.org/bpel/sample"
-        xmlns:tns="http://sample.bpel.org/bpel/sample"
+        targetNamespace="http://ode/bpel/unit-test/TestIMA.wsdl"
+        xmlns:tns="http://ode/bpel/unit-test/TestIMA.wsdl"
         xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype"
         xmlns="http://schemas.xmlsoap.org/wsdl/"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -31,10 +31,15 @@
 
     <message name="TestIMAMessage">
         <part name="payload" type="xsd:string"/>
+        <part name="value" type="xsd:string"/>
     </message>
 
     <portType name="TestIMA">
         <operation name="process">
+            <input  message="tns:TestIMAMessage" />
+            <output message="tns:TestIMAMessage"/>
+        </operation>
+        <operation name="complete">
             <input  message="tns:TestIMAMessage" />
             <output message="tns:TestIMAMessage"/>
         </operation>
