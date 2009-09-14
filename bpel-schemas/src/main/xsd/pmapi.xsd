@@ -109,6 +109,7 @@
         	<element name="upgradeInstance" minOccurs="0" maxOccurs="unbounded" type="long"/>
         	<element name="replaceInstance" minOccurs="0" maxOccurs="unbounded" type="long"/>
         	<element name="restoreInstance" minOccurs="0" maxOccurs="unbounded" type="pmapi:CommunicationType"/>
+        	<element name="synchronizeInstance" minOccurs="0" maxOccurs="unbounded" type="pmapi:CommunicationType"/>
         </sequence>
     </complexType>
 

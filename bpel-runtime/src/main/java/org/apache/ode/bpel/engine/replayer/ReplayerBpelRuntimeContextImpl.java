@@ -80,22 +80,22 @@ public class ReplayerBpelRuntimeContextImpl extends BpelRuntimeContextImpl {
 		Exchange answer = replayerContext.answers.fetchAnswer(partnerLink.partnerLink.partnerRolePortType.getQName(), operation.getName());
 
 		if (messageHasChanged(outgoingMessage, answer)) {
-			//invoke with new data, previous invoke needs to be compensate
+			//invoke with new data, previous invoke needs to be compensated
 			__log.debug("data has changed, invoke with new data");
 			return super.invoke(aid, partnerLink, operation, outgoingMessage, channel);
 		}
 		
 		if (answer.getType() == ExchangeType.S) {
-			__log.debug("synchronize with CPC partner");
+			__log.debug("synchronize with partner");
 			return synchronizeInvoke(aid, partnerLink, operation, outgoingMessage, channel, answer);
 		} 
 		
-		__log.debug("do not synchronize, replay invoke");
-		return replayInvoke(aid, partnerLink, operation, outgoingMessage, channel, answer);
+		__log.debug("do not synchronize, mock invoke");
+		return mockInvoke(aid, partnerLink, operation, outgoingMessage, channel, answer);
 		
 	}
 	
-	private String replayInvoke(int aid, PartnerLinkInstance partnerLink, Operation operation,
+	private String mockInvoke(int aid, PartnerLinkInstance partnerLink, Operation operation,
 			Element outgoingMessage, InvokeResponseChannel channel, Exchange answer)
 			throws FaultException {
 		
