@@ -35,7 +35,7 @@ public class OConstants extends OBase implements ConstantsModel {
     public QName qnMissingReply;
     public QName qnUninitializedVariable;
     public QName qnConflictingReceive;
-    public QName qnConflicitingRequest;
+    public QName qnConflictingRequest;
     public QName qnSelectionFailure;
     public QName qnMismatchedAssignmentFailure;
     public QName qnJoinFailure;
@@ -63,7 +63,7 @@ public class OConstants extends OBase implements ConstantsModel {
     }
     
     public QName getConflictingRequest() {
-        return qnConflicitingRequest;
+        return qnConflictingRequest;
     }
 
     public QName getCorrelationViolation() {

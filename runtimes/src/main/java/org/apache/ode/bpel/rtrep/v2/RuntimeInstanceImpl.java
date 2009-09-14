@@ -481,7 +481,7 @@ public class RuntimeInstanceImpl implements OdeInternalInstance, OdeRTInstance {
 
     public void associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef, String mexDAO) throws FaultException {
         if(!getORM().associateEvent(plinkInstance, opName, key, mexRef, mexDAO)) {
-            throw new FaultException(_runtime._oprocess.constants.qnConflicitingRequest);
+            throw new FaultException(_runtime._oprocess.constants.qnConflictingRequest);
         }
     }
 
