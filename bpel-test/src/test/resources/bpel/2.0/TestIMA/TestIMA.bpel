@@ -17,7 +17,7 @@
     ~ under the License.
 -->
 
-<bpel:process name="TestIMA" targetNamespace="http://sample.bpel.org/bpel/sample" suppressJoinFailure="yes" xmlns:tns="http://sample.bpel.org/bpel/sample" xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/process/executable /home/joker/bpel-schema/ws-bpel_executable.xsd">
+<bpel:process name="TestIMAProcess" targetNamespace="http://ode/bpel/unit-test/TestIMA" suppressJoinFailure="yes" xmlns:tns="http://sample.bpel.org/bpel/sample" xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/process/executable /usr/share/bpel-schema/ws-bpel_executable.xsd">
     <bpel:import location="TestIMA.wsdl" namespace="http://sample.bpel.org/bpel/sample" importType="http://schemas.xmlsoap.org/wsdl/" />
     <bpel:partnerLinks>
         <bpel:partnerLink name="client" partnerLinkType="tns:TestIMA" myRole="TestIMAProvider" />
@@ -34,9 +34,8 @@
                 <bpel:correlation set="CorrelationSet" initiate="yes"></bpel:correlation>
             </bpel:correlations>
         </bpel:receive>
-        <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="process" variable="input" />
         
-        <bpel:scope>
+        <bpel:scope name="ConflictingReceiveInOnly">
             <bpel:faultHandlers>
                 <bpel:catch faultName="conflictingReceive">
                     <bpel:empty/>
@@ -59,7 +58,7 @@
             </bpel:sequence>
         </bpel:scope>
         
-        <bpel:scope>
+        <bpel:scope name="ConflictingReceiveInOut">
             <bpel:faultHandlers>
                 <bpel:catch faultName="conflictingReceive">
                     <bpel:empty/>
@@ -82,7 +81,30 @@
             </bpel:sequence>
         </bpel:scope>
         
-        <bpel:scope>
+        <bpel:scope name="ConflictingReceiveInOnlyTwoMexes">
+            <bpel:faultHandlers>
+                <bpel:catch faultName="conflictingReceive">
+                    <bpel:empty/>
+                </bpel:catch>
+            </bpel:faultHandlers>
+            <bpel:sequence>
+                <bpel:flow>
+                    <bpel:receive partnerLink="client" operation="inOnly" variable="input" messageExchange="mex1">
+                        <bpel:correlations>
+                            <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
+                        </bpel:correlations>
+                    </bpel:receive>
+                    <bpel:receive partnerLink="client" operation="inOnly" variable="input" messageExchange="mex2">
+                        <bpel:correlations>
+                            <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
+                        </bpel:correlations>
+                    </bpel:receive>
+                </bpel:flow>
+                <bpel:throw faultName="error"/>
+            </bpel:sequence>
+        </bpel:scope>
+
+        <bpel:scope name="ConflictingReceiveInOutTwoMexes">
             <bpel:faultHandlers>
                 <bpel:catch faultName="conflictingReceive">
                     <bpel:empty/>
@@ -105,10 +127,10 @@
             </bpel:sequence>
         </bpel:scope>
         
-        <bpel:scope>
+        <bpel:scope name="ConflictingRequestInOut">
             <bpel:faultHandlers>
                 <bpel:catch faultName="conflictingRequest">
-                    <bpel:empty/>
+                    <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="inOut" variable="input" messageExchange="mex1" />
                 </bpel:catch>
             </bpel:faultHandlers>
             <bpel:sequence>
@@ -126,9 +148,8 @@
             </bpel:sequence>
         </bpel:scope>
 
-        <bpel:scope>
+        <bpel:scope name="TwoMexesInOut">
             <bpel:sequence>
-                <!-- This should work -->
                 <bpel:receive partnerLink="client" operation="inOut" variable="input" messageExchange="mex2">
                     <bpel:correlations>
                         <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
@@ -146,12 +167,6 @@
             </bpel:sequence>
         </bpel:scope>
         
-        
-        <bpel:receive partnerLink="client" portType="tns:TestIMA" operation="process" variable="input" createInstance="no">
-            <bpel:correlations>
-                <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
-            </bpel:correlations>
-        </bpel:receive>
         <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="process" variable="input" />
     </bpel:sequence>
 </bpel:process>
