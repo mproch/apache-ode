@@ -25,8 +25,6 @@
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns:vprop="http://docs.oasis-open.org/wsbpel/2.0/varprop"
-        xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/plnktype /home/joker/bpel-schema/ws-bpel_plnktype.xsd"
-        xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/varprop /home/joker/bpel-schema/ws-bpel_varprop.xsd"
         >
 
     <message name="TestIMAMessage">
@@ -52,7 +50,7 @@
         </operation>
     </portType>
   
-    <plnk:partnerLinkType name="TestIMA">
+    <plnk:partnerLinkType name="TestIMAPL">
         <plnk:role name="TestIMAProvider" portType="tns:TestIMA"/>
     </plnk:partnerLinkType>
     <vprop:property name="input" type="xsd:string"/>

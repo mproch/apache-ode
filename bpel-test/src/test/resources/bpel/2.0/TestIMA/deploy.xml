@@ -23,7 +23,7 @@
 
 	<process name="pns:TestIMAProcess">
 		<active>true</active>
-		<provide partnerLink="request">
+		<provide partnerLink="client">
 			<service name="wns:TestIMAService" port="wns:TestIMAPort"/>
 		</provide>
 	</process>
