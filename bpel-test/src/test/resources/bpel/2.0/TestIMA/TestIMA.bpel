@@ -17,19 +17,19 @@
     ~ under the License.
 -->
 
-<bpel:process name="TestIMAProcess" targetNamespace="http://ode/bpel/unit-test/TestIMA" suppressJoinFailure="yes" xmlns:tns="http://sample.bpel.org/bpel/sample" xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/process/executable /usr/share/bpel-schema/ws-bpel_executable.xsd">
-    <bpel:import location="TestIMA.wsdl" namespace="http://sample.bpel.org/bpel/sample" importType="http://schemas.xmlsoap.org/wsdl/" />
+<bpel:process name="TestIMAProcess" targetNamespace="http://ode/bpel/unit-test/TestIMA" suppressJoinFailure="yes" xmlns:tns="http://ode/bpel/unit-test/TestIMA" xmlns:wns="http://ode/bpel/unit-test/TestIMA.wsdl" xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/process/executable /usr/share/bpel-schema/ws-bpel_executable.xsd">
+    <bpel:import location="TestIMA.wsdl" namespace="http://ode/bpel/unit-test/TestIMA.wsdl" importType="http://schemas.xmlsoap.org/wsdl/" />
     <bpel:partnerLinks>
-        <bpel:partnerLink name="client" partnerLinkType="tns:TestIMA" myRole="TestIMAProvider" />
+        <bpel:partnerLink name="client" partnerLinkType="wns:TestIMAPL" myRole="TestIMAProvider" />
     </bpel:partnerLinks>
     <bpel:variables>
-        <bpel:variable name="input" messageType="tns:TestIMAMessage" />
+        <bpel:variable name="input" messageType="wns:TestIMAMessage" />
     </bpel:variables>
     <bpel:correlationSets>
-        <bpel:correlationSet name="CorrelationSet" properties="tns:input"></bpel:correlationSet>
+        <bpel:correlationSet name="CorrelationSet" properties="wns:input"></bpel:correlationSet>
     </bpel:correlationSets>
     <bpel:sequence>
-        <bpel:receive partnerLink="client" portType="tns:TestIMA" operation="process" variable="input" createInstance="yes">
+        <bpel:receive partnerLink="client" portType="wns:TestIMA" operation="process" variable="input" createInstance="yes">
             <bpel:correlations>
                 <bpel:correlation set="CorrelationSet" initiate="yes"></bpel:correlation>
             </bpel:correlations>
@@ -130,7 +130,7 @@
         <bpel:scope name="ConflictingRequestInOut">
             <bpel:faultHandlers>
                 <bpel:catch faultName="conflictingRequest">
-                    <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="inOut" variable="input" messageExchange="mex1" />
+                    <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex1" />
                 </bpel:catch>
             </bpel:faultHandlers>
             <bpel:sequence>
@@ -162,12 +162,12 @@
                     </bpel:correlations>
                 </bpel:receive>
 
-                <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="inOut" variable="input" messageExchange="mex2" />
-                <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="inOut" variable="input" messageExchange="mex3" />
+                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex2" />
+                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex3" />
             </bpel:sequence>
         </bpel:scope>
         
-        <bpel:reply partnerLink="client" portType="tns:TestIMA" operation="process" variable="input" />
+        <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="process" variable="input" />
     </bpel:sequence>
 </bpel:process>
 
