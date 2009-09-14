@@ -36,6 +36,7 @@ import javax.xml.namespace.QName;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.ode.bpel.dao.BpelDAOConnectionFactory;
 import org.apache.ode.bpel.engine.BpelServerImpl;
+import org.apache.ode.bpel.evtproc.DebugBpelEventListener;
 import org.apache.ode.bpel.iapi.*;
 import org.apache.ode.bpel.iapi.MessageExchange.AckType;
 import org.apache.ode.bpel.iapi.MessageExchange.Status;
@@ -142,7 +143,7 @@ public abstract class BPELTestAbstract {
 //            }
 //        });
         _server.setConfigProperties(new OdeConfigProperties(getConfigProperties(), ""));
-        // _server.registerBpelEventListener(new DebugBpelEventListener());
+        _server.registerBpelEventListener(new DebugBpelEventListener());
         _server.init();
         _server.start();
     }
