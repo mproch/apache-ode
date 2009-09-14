@@ -37,7 +37,7 @@
         
         <bpel:scope name="ConflictingReceiveInOnly">
             <bpel:faultHandlers>
-                <bpel:catch faultName="conflictingReceive">
+                <bpel:catch faultName="bpel:conflictingReceive">
                     <bpel:empty/>
                 </bpel:catch>
             </bpel:faultHandlers>
@@ -60,7 +60,7 @@
         
         <bpel:scope name="ConflictingReceiveInOut">
             <bpel:faultHandlers>
-                <bpel:catch faultName="conflictingReceive">
+                <bpel:catch faultName="bpel:conflictingReceive">
                     <bpel:empty/>
                 </bpel:catch>
             </bpel:faultHandlers>
@@ -83,7 +83,7 @@
         
         <bpel:scope name="ConflictingReceiveInOnlyTwoMexes">
             <bpel:faultHandlers>
-                <bpel:catch faultName="conflictingReceive">
+                <bpel:catch faultName="bpel:conflictingReceive">
                     <bpel:empty/>
                 </bpel:catch>
             </bpel:faultHandlers>
@@ -106,7 +106,7 @@
 
         <bpel:scope name="ConflictingReceiveInOutTwoMexes">
             <bpel:faultHandlers>
-                <bpel:catch faultName="conflictingReceive">
+                <bpel:catch faultName="bpel:conflictingReceive">
                     <bpel:empty/>
                 </bpel:catch>
             </bpel:faultHandlers>
@@ -129,7 +129,7 @@
         
         <bpel:scope name="ConflictingRequestInOut">
             <bpel:faultHandlers>
-                <bpel:catch faultName="conflictingRequest">
+                <bpel:catch faultName="bpel:conflictingRequest">
                     <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex1" />
                 </bpel:catch>
             </bpel:faultHandlers>
