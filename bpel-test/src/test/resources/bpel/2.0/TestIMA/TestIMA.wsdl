@@ -48,6 +48,10 @@
         	<input message="tns:TestIMAMessage"></input>
         	<output message="tns:TestIMAMessage"></output>
         </operation>
+        <operation name="inOut2">
+            <input message="tns:TestIMAMessage"></input>
+            <output message="tns:TestIMAMessage"></output>
+        </operation>
     </portType>
   
     <plnk:partnerLinkType name="TestIMAPL">
