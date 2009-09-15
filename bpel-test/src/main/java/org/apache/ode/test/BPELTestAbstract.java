@@ -237,21 +237,24 @@ public abstract class BPELTestAbstract {
             final QName serviceId = new QName(testProps.getProperty("namespace"), testProps.getProperty("service"));
             final String operation = testProps.getProperty("operation");
 
+            Boolean sequential = Boolean.parseBoolean(testProps.getProperty("sequential", "false"));
+            
+            Invocation last = null;
             for (int i = 1; testProps.getProperty("request" + i) != null; i++) {
                 final String in = testProps.getProperty("request" + i);
                 final String responsePattern = testProps.getProperty("response" + i);
 
-                addInvoke(testPropsFile + "#" + i, serviceId, operation, in, responsePattern);
+                last = addInvoke(testPropsFile + "#" + i, serviceId, operation, in, responsePattern, sequential ? last : null);
             }
             propsFileCnt++;
             testPropsFile = new File(deployDir, "test" + propsFileCnt + ".properties");
         }
     }
 
-    protected Invocation addInvoke(String id, QName target, String operation, String request, String responsePattern)
+    protected Invocation addInvoke(String id, QName target, String operation, String request, String responsePattern, Invocation synchronizeWith)
             throws Exception {
 
-        Invocation inv = new Invocation(id);
+        Invocation inv = new Invocation(id, synchronizeWith);
         inv.target = target;
         inv.operation = operation;
         inv.request = DOMUtils.stringToDOM(request);
@@ -507,6 +510,12 @@ public abstract class BPELTestAbstract {
         /** Identifier (for reporting). */
         public String id;
 
+        /** for sync invocations */
+        public Invocation synchronizeWith;
+        
+        /** checking completion */
+        public boolean done = false;
+        
         /** Name of the operation to invoke. */
         public String operation;
 
@@ -546,8 +555,9 @@ public abstract class BPELTestAbstract {
 
         QName requestType;
 
-        public Invocation(String id) {
+        public Invocation(String id, Invocation synchronizeWith) {
             this.id = id;
+            this.synchronizeWith = synchronizeWith;
         }
 
         public String toString() {
@@ -566,6 +576,17 @@ public abstract class BPELTestAbstract {
         }
 
         public void run() {
+            try {
+                run2();
+            } finally {
+                synchronized (_invocation) {
+                    _invocation.done = true;
+                    _invocation.notify();
+                }
+            }
+        }
+        
+        public void run2() {
             final MyRoleMessageExchange mex;
             final Future<MessageExchange.Status> running;
 
@@ -573,6 +594,19 @@ public abstract class BPELTestAbstract {
             try {
                 Thread.sleep(_invocation.invokeDelayMs * 1000);
             } catch (Exception ex) {
+            }
+            
+            if (_invocation.synchronizeWith != null) {
+                synchronized (_invocation.synchronizeWith) {
+                    while (!_invocation.synchronizeWith.done) {
+                        try {
+                            _invocation.synchronizeWith.wait(_invocation.maximumWaitMs);
+                        } catch (InterruptedException e) {
+                            failure(_invocation, "timed out waiting in sequence", e);
+                            return;
+                        }
+                    }
+                }
             }
 
             try {
