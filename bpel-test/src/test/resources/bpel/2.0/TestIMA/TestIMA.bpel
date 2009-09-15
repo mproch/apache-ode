@@ -147,23 +147,29 @@
                 <bpel:throw faultName="error"/>
             </bpel:sequence>
         </bpel:scope>
+        <bpel:receive partnerLink="client" operation="inOut" variable="input" messageExchange="mex1">
+            <bpel:correlations>
+                <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
+            </bpel:correlations>
+        </bpel:receive>
+        <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex1" />
 
         <bpel:scope name="TwoMexesInOut">
             <bpel:sequence>
-                <bpel:receive partnerLink="client" operation="inOut" variable="input" messageExchange="mex2">
+                <bpel:receive partnerLink="client" operation="inOut2" variable="input" messageExchange="mex2">
                     <bpel:correlations>
                         <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
                     </bpel:correlations>
                 </bpel:receive>
                 
-                <bpel:receive partnerLink="client" operation="inOut" variable="input" messageExchange="mex3">
+                <bpel:receive partnerLink="client" operation="inOut2" variable="input" messageExchange="mex3">
                     <bpel:correlations>
                         <bpel:correlation set="CorrelationSet" initiate="no"></bpel:correlation>
                     </bpel:correlations>
                 </bpel:receive>
 
-                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex2" />
-                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut" variable="input" messageExchange="mex3" />
+                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut2" variable="input" messageExchange="mex2" />
+                <bpel:reply partnerLink="client" portType="wns:TestIMA" operation="inOut2" variable="input" messageExchange="mex3" />
             </bpel:sequence>
         </bpel:scope>
         
