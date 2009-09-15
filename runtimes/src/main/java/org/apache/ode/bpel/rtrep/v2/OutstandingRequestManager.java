@@ -173,13 +173,12 @@ class OutstandingRequestManager implements Serializable {
     }
 
     public boolean associateEvent(PartnerLinkInstance plinkInstance, String opName, CorrelationKey key, String mexRef, String mexDAO) {
-        ReplyIdTuple reply = new ReplyIdTuple(plinkInstance, opName, mexRef);
-        if (_byReply.containsKey(reply)) {
-            return false;
-        }
-        
+        // remove pending request first in case of fault to
+        // ensure _byRequest state stays clean
         RequestIdTuple rid = new RequestIdTuple(plinkInstance, opName, key);
         SelectEntry entry = _byRequest.get(rid);
+        while(_byRequest.values().remove(entry));
+        
         if (entry.mexRef != null) {
             String errmsg = "INTERNAL ERROR: Duplicate ASSOCIATION for ENTRY " + entry;
             __log.fatal(errmsg);
@@ -187,8 +186,11 @@ class OutstandingRequestManager implements Serializable {
         }
         entry.mexRef = mexDAO;
         
-        // remove all pending requests for this entry
-        while(_byRequest.values().remove(entry));
+        ReplyIdTuple reply = new ReplyIdTuple(plinkInstance, opName, mexRef);
+        if (_byReply.containsKey(reply)) {
+            return false;
+        }
+        
         // create a pending reply
         _byReply.put(reply, entry);
         return true;
