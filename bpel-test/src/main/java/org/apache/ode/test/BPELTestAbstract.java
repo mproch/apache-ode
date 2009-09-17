@@ -251,6 +251,10 @@ public abstract class BPELTestAbstract {
         }
     }
 
+    protected Invocation addInvoke(String id, QName target, String operation, String request, String responsePattern) throws Exception {
+        return addInvoke(id, target, operation, request, responsePattern, null);
+    }
+    
     protected Invocation addInvoke(String id, QName target, String operation, String request, String responsePattern, Invocation synchronizeWith)
             throws Exception {
 
