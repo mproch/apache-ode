@@ -45,10 +45,18 @@
         	<input message="tns:TestIMAMessage"></input>
         </operation>
         <operation name="inOut">
+            <input message="tns:TestIMAMessage"></input>
+            <output message="tns:TestIMAMessage"></output>
+        </operation>
+        <operation name="inOut2">
         	<input message="tns:TestIMAMessage"></input>
         	<output message="tns:TestIMAMessage"></output>
         </operation>
-        <operation name="inOut2">
+        <operation name="inOut3">
+            <input message="tns:TestIMAMessage"></input>
+            <output message="tns:TestIMAMessage"></output>
+        </operation>
+        <operation name="inOut4">
             <input message="tns:TestIMAMessage"></input>
             <output message="tns:TestIMAMessage"></output>
         </operation>

@@ -26,5 +26,8 @@
 		<provide partnerLink="client">
 			<service name="wns:TestIMAService" port="wns:TestIMAPort"/>
 		</provide>
+        <invoke partnerLink="client">
+            <service name="wns:TestIMAService" port="wns:TestIMAPort"/>
+        </invoke>
 	</process>
 </deploy>
