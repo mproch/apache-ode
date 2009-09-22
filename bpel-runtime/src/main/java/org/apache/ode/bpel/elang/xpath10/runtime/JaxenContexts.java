@@ -33,7 +33,6 @@ import org.apache.ode.bpel.o.OVarType;
 import org.apache.ode.bpel.o.OXsdTypeVarType;
 import org.apache.ode.bpel.o.OXslSheet;
 import org.apache.ode.utils.DOMUtils;
-import org.apache.ode.utils.xsd.XSTypes;
 import org.apache.ode.utils.xsl.XslTransformHandler;
 import org.jaxen.Context;
 import org.jaxen.Function;

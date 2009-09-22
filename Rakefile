@@ -364,6 +364,7 @@ define "ode" do
       DERBY, Java::JUnit::JUNIT_REQUIRES, JAVAX.persistence, OPENJPA, WSDL4J, COMMONS.httpclient,
     COMMONS.codec
 
+    test.using :java_args=>ENV['TEST_JVM_ARGS']
     test.with projects("bpel-obj", "jacob", "bpel-schemas",
       "bpel-scripts", "scheduler-simple"),
       COMMONS.collections, COMMONS.lang, COMMONS.logging, DERBY, JAVAX.connector,
