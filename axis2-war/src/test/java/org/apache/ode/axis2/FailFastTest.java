@@ -34,9 +34,7 @@ import java.util.regex.Pattern;
  */
 public class FailFastTest extends Axis2TestBase {
 
-
-    @DataProvider(name = "input")
-    private Object[][] bundleLIst(){
+    private Object[][] bundleList(){
         return new Object[][]{
                 {"TestFailFast/invoke", ".*Message exchange failure due to: The service cannot be found for the endpoint reference .*"},
                 {"TestFailFast/faultOnFailure", ".*xmlns:axis2ns\\d=\"http://ode.apache.org/activityRecovery\">axis2ns\\d:activityFailure.*"},
@@ -44,18 +42,23 @@ public class FailFastTest extends Axis2TestBase {
         };
     }
 
-    @Test(dataProvider="input")
-    public void shouldNotTimeout(String bundleName, String expectedMsgPattern) throws Exception {
-        if (server.isDeployed(bundleName)) server.undeployProcess(bundleName);
-        server.deployProcess(bundleName);
-        try {
-            String response = server.sendRequestFile("http://localhost:8888/processes/helloWorld", bundleName, "testRequest.soap");
-            System.out.println(response);
-            String badMessage = "java.util.concurrent.TimeoutException: Message exchange";
-            assertFalse("Client should NOT time out! It should receive the true failure", response.contains(badMessage));
-            assertTrue("Client did not receive the right error message!", Pattern.compile(expectedMsgPattern, Pattern.DOTALL).matcher(response).matches());
-        } finally {
-            server.undeployProcess(bundleName);
+    @Test(dataProvider="configs")
+    public void shouldNotTimeout() throws Exception {
+        for (Object[] o : bundleList()) {
+            String bundleName = (String) o[0];
+            String expectedMsgPattern = (String) o[1];
+
+	        if (server.isDeployed(bundleName)) server.undeployProcess(bundleName);
+	        server.deployProcess(bundleName);
+	        try {
+	            String response = server.sendRequestFile("http://localhost:8888/processes/helloWorld", bundleName, "testRequest.soap");
+	            System.out.println(response);
+	            String badMessage = "java.util.concurrent.TimeoutException: Message exchange";
+	            assertFalse("Client should NOT time out! It should receive the true failure", response.contains(badMessage));
+	            assertTrue("Client did not receive the right error message!", Pattern.compile(expectedMsgPattern, Pattern.DOTALL).matcher(response).matches());
+	        } finally {
+	            server.undeployProcess(bundleName);
+	        }
         }
     }
 }
