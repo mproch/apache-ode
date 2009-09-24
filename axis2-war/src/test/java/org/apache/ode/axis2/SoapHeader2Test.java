@@ -104,7 +104,7 @@ public class SoapHeader2Test extends Axis2TestBase {
         super.tearDown();
     }
 
-    @Test(dataProvider="configs")
+    @Test
     public void testSoapHeaders() throws Exception {
         String bundleName = "TestSoapHeader2";
         // deploy the required service

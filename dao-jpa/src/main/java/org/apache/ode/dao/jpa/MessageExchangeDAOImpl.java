@@ -293,9 +293,9 @@ public class MessageExchangeDAOImpl extends OpenJPADAO implements MessageExchang
 		_fault = faultType == null ? null : faultType.toString();
 	}
 
-    public void setFaultExplanation(String explanation) {
-        _faultExplanation = explanation == null ? null : explanation.length() < 255 ? explanation : explanation.substring(0, 255);
-    }
+	public void setFaultExplanation(String explanation) {
+		_faultExplanation = explanation;
+	}
 
 	public void setInstance(ProcessInstanceDAO dao) {
 		_processInst = (ProcessInstanceDAOImpl)dao;

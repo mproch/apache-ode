@@ -68,7 +68,7 @@ public class InstanceManagementTest extends Axis2TestBase {
     }
 
 
-  @Test(dataProvider="configs")
+  @Test
     public void testListInstances() throws Exception {
         OMElement listRoot = _client.buildMessage("listInstances", new String[] {"filter", "order", "limit"},
                 new String[] {"name=DynPartnerMain", "", "10"});
@@ -86,7 +86,7 @@ public class InstanceManagementTest extends Axis2TestBase {
         assert(result.toString().split("instance-info").length == 5);
     }
 
-    @Test(dataProvider="configs")
+  @Test
     public void testListAllInstances() throws Exception {
         OMElement root = _client.buildMessage("listAllInstancesWithLimit", new String[] {"limit"}, new String[] {"1"});
         OMElement result = sendToIM(root);
@@ -97,7 +97,7 @@ public class InstanceManagementTest extends Axis2TestBase {
                 result.toString().indexOf("DynPartnerResponder") >= 0);
     }
 
-  @Test(dataProvider="configs")
+  @Test
     public void testInstanceSummaryListProcess() throws Exception {
         OMElement listRoot = _client.buildMessage("listProcesses", new String[] {"filter", "orderKeys"},
                 new String[] {"name=DynPartnerMain", ""});
@@ -114,7 +114,7 @@ public class InstanceManagementTest extends Axis2TestBase {
         assert(count == 1);
     }
 
-    @Test(dataProvider="configs")
+  @Test
     public void testGetInstanceInfo() throws Exception {
         OMElement root = _client.buildMessage("listAllInstances", new String[] {}, new String[] {});
         OMElement result = sendToIM(root);
@@ -125,7 +125,7 @@ public class InstanceManagementTest extends Axis2TestBase {
         assert(result.toString().split("instance-info").length == 3);
     }
 
-  @Test(dataProvider="configs")
+  @Test
     public void testGetInstanceInfoFault() throws Exception {
         // Hopefully this id won't exist
         OMElement root = _client.buildMessage("getInstanceInfo", new String[] {"iid"}, new String[] {"65431"});
@@ -137,7 +137,7 @@ public class InstanceManagementTest extends Axis2TestBase {
         }
     }
 
-    @Test(dataProvider="configs")
+  @Test
     public void testGetScopeInfo() throws Exception {
       OMElement root = _client.buildMessage("listInstances", new String[] {"filter", "order", "limit"},
               new String[] {"name=DynPartnerMain", "", "10"});
@@ -152,7 +152,7 @@ public class InstanceManagementTest extends Axis2TestBase {
         assert(result.toString().indexOf("activity-info") >= 0);
     }
 
-  @Test(dataProvider="configs")
+  @Test
     public void testGetVariableInfo() throws Exception {
         OMElement root = _client.buildMessage("listInstances", new String[] {"filter", "order", "limit"},
                 new String[] {"name=DynPartnerMain", "", "10"});
@@ -182,7 +182,7 @@ public class InstanceManagementTest extends Axis2TestBase {
 //        assert(result.toString().split("element").length > 10);
 //    }
 
-    @Test(dataProvider="configs")
+  @Test
     public void testDeleteInstances() throws Exception {
         OMElement root = _client.buildMessage("listAllInstancesWithLimit", new String[] {"limit"}, new String[] {"1"});
         OMElement result = sendToIM(root);
