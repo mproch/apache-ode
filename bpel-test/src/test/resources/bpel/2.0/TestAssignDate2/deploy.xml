@@ -23,7 +23,7 @@
 
     <dd:process name="sam:TestAssignDate2" fileName="TestAssignDate.bpel">
         <dd:provide partnerLink="client">
-            <dd:service name="sam:TestAssignDate" port="default" />
+            <dd:service name="sam:TestAssignDate" port="TestAssignDate" />
         </dd:provide>
     </dd:process>
 </dd:deploy>

@@ -20,7 +20,7 @@
 <bpws:process xmlns:bpws="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:sam="http://sample.bpel.org/bpel/sample" exitOnStandardFault="yes" name="TestAssignDate2" suppressJoinFailure="yes" targetNamespace="http://sample.bpel.org/bpel/sample" expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://docs.oasis-open.org/wsbpel/2.0/process/executable /usr/share/bpel-schema/ws-bpel_executable.xsd">
   <bpws:import importType="http://schemas.xmlsoap.org/wsdl/" location="TestAssignDate.wsdl" namespace="http://sample.bpel.org/bpel/sample"/>
   <bpws:partnerLinks>
-    <bpws:partnerLink myRole="TestAssignDateProvider" partnerRole="TestAssignDateProvider" name="client" partnerLinkType="sam:TestAssignDate" initializePartnerRole="no"/>
+    <bpws:partnerLink myRole="TestAssignDateProvider" name="client" partnerLinkType="sam:TestAssignDate"/>
   </bpws:partnerLinks>
   <bpws:variables>
     <bpws:variable messageType="sam:TestAssignDateMessage" name="input"/>
