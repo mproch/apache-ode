@@ -591,22 +591,27 @@ public class BpelProcess {
     }
 
     void deactivate() {
-        // Deactivate all the my-role endpoints.
-        for (Endpoint endpoint : _myEprs.keySet()) {
-            // Deactivate the EPR only if there are no more references
-            // to this endpoint from any (active) BPEL process.
-            if (isShareable(endpoint)) {
-                __log.debug("deactivating shared endpoint " + endpoint);
-                if (!_sharedEps.decrementReferenceCount(endpoint)) {
+        // the BindingContext contains only the endpoints for the latest process version
+        if (org.apache.ode.bpel.iapi.ProcessState.ACTIVE.equals(_pconf.getState())) {
+            // Deactivate all the my-role endpoints.
+            for (Endpoint endpoint : _myEprs.keySet()) {
+                // Deactivate the EPR only if there are no more references
+                // to this endpoint from any (active) BPEL process.
+                if (isShareable(endpoint)) {
+                    if(__log.isDebugEnabled()) __log.debug("deactivating shared endpoint " + endpoint+ " for pid "+ _pid);
+                    if (!_sharedEps.decrementReferenceCount(endpoint)) {
+                        _engine._contexts.bindingContext.deactivateMyRoleEndpoint(endpoint);
+                        _sharedEps.removeEndpoint(endpoint);
+                    }
+                } else {
+                    if(__log.isDebugEnabled()) __log.debug("deactivating non-shared endpoint " + endpoint + " for pid "+ _pid);
                     _engine._contexts.bindingContext.deactivateMyRoleEndpoint(endpoint);
-                    _sharedEps.removeEndpoint(endpoint);
                 }
-            } else {
-                __log.debug("deactivating non-shared endpoint " + endpoint);
-                _engine._contexts.bindingContext.deactivateMyRoleEndpoint(endpoint);
             }
+            // TODO Deactivate all the partner-role channels
+        } else {
+            if(__log.isDebugEnabled()) __log.debug("pid "+_pid+" is not ACTIVE, no endpoints to deactivate");
         }
-        // TODO Deactivate all the partner-role channels
     }
 
     private boolean isShareable(Endpoint endpoint) {
@@ -1099,13 +1104,15 @@ public class BpelProcess {
         // OPartnerLink, PartnerLinkPartnerRoleImpl
         final PartnerLinkPartnerRoleImpl linkPartnerRole = _partnerRoles.get(partnerLink);
         long timeout = Properties.DEFAULT_MEX_TIMEOUT;
-        String timeout_property = _pconf.getEndpointProperties(linkPartnerRole._initialEPR).get(Properties.PROP_MEX_TIMEOUT);
-        if (timeout_property != null) {
-            try {
-                timeout = Long.parseLong(timeout_property);
-            } catch (NumberFormatException e) {
-                if (__log.isWarnEnabled())
-                    __log.warn("Mal-formatted Property: [" + Properties.PROP_MEX_TIMEOUT + "=" + timeout_property + "] Default value (" + timeout + ") will be used");
+        if (linkPartnerRole._initialEPR != null) {
+            String timeout_property = _pconf.getEndpointProperties(linkPartnerRole._initialEPR).get(Properties.PROP_MEX_TIMEOUT);
+            if (timeout_property != null) {
+                try {
+                    timeout = Long.parseLong(timeout_property);
+                } catch (NumberFormatException e) {
+                    if (__log.isWarnEnabled())
+                        __log.warn("Mal-formatted Property: [" + Properties.PROP_MEX_TIMEOUT + "=" + timeout_property + "] Default value (" + timeout + ") will be used");
+                }
             }
         }
 

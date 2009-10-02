@@ -61,8 +61,8 @@ COMMONS             = struct(
   :pool             =>"commons-pool:commons-pool:jar:1.2",
   :primitives       =>"commons-primitives:commons-primitives:jar:1.0"
 )
-DERBY               = "org.apache.derby:derby:jar:10.4.1.3"
-DERBY_TOOLS         = "org.apache.derby:derbytools:jar:10.4.1.3"
+DERBY               = "org.apache.derby:derby:jar:10.5.3.0"
+DERBY_TOOLS         = "org.apache.derby:derbytools:jar:10.5.3.0"
 DOM4J               = "dom4j:dom4j:jar:1.6.1"
 GERONIMO            = struct(
   :kernel           =>"org.apache.geronimo.modules:geronimo-kernel:jar:2.0.1",
@@ -102,6 +102,7 @@ SERVICEMIX          = [
                         group("servicemix-utils", 
                             :under=>"org.apache.servicemix", :version=>"1.0.0"),
                         "commons-httpclient:commons-httpclient:jar:3.0", 
+                        "commons-codec:commons-codec:jar:1.2",
                         "org.mortbay.jetty:jetty:jar:6.1.12rc1",
                         "org.mortbay.jetty:jetty-client:jar:6.1.12rc1",
                         "org.mortbay.jetty:jetty-sslengine:jar:6.1.12rc1",
@@ -325,7 +326,7 @@ define "ode" do
 
   desc "ODE Simple Scheduler"
   define "scheduler-simple" do
-    compile.with projects("bpel-api", "utils"), COMMONS.collections, COMMONS.logging, JAVAX.transaction
+    compile.with projects("bpel-api", "utils"), COMMONS.collections, COMMONS.logging, JAVAX.transaction, LOG4J
     test.compile.with HSQLDB, GERONIMO.kernel, GERONIMO.transaction
     test.with HSQLDB, JAVAX.transaction, JAVAX.resource, JAVAX.connector, LOG4J,
           GERONIMO.kernel, GERONIMO.transaction, BACKPORT, JAVAX.ejb
@@ -517,7 +518,7 @@ define "ode" do
       jbi.include path_to("src/main/jbi/ode-jbi.properties")
     end
 
-    test.using :properties=>{ "java.naming.factory.initial" => "org.apache.xbean.spring.jndi.SpringInitialContextFactory"}
+    test.using :properties=>{ "java.naming.factory.initial" => "org.apache.xbean.spring.jndi.SpringInitialContextFactory"}, :java_args=>ENV['TEST_JVM_ARGS']
     test.with projects("dao-jpa", "dao-hibernate", "bpel-compiler", "bpel-api-jca", "jca-ra",
       "jca-server", "jacob"),
       BACKPORT, COMMONS.lang, COMMONS.collections, DERBY, GERONIMO.connector, GERONIMO.kernel,
