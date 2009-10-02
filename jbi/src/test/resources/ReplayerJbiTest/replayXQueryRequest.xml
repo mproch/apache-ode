@@ -91,6 +91,5 @@
             </exchange>
         </ns:restoreInstance>
     </replay>
-    <balancerKey></balancerKey>
 </pmap:replay>
 
