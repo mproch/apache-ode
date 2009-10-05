@@ -46,8 +46,16 @@ import org.apache.ode.daohib.bpel.hobj.HProcessInstance;
 import org.apache.ode.utils.DOMUtils;
 import org.w3c.dom.Element;
 
-public class MessageExchangeDaoImpl extends HibernateDao implements MessageExchangeDAO {
+import javax.xml.namespace.QName;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Set;
 
+public class MessageExchangeDaoImpl extends HibernateDao implements
+        MessageExchangeDAO {
+    @SuppressWarnings("unused")
+    private static final Log __log = LogFactory.getLog(MessageExchangeDaoImpl.class);
+    
     private HMessageExchange _hself;
 
     // Used when provided process and instance aren't hibernate implementations. The relation
@@ -357,65 +365,44 @@ public class MessageExchangeDaoImpl extends HibernateDao implements MessageExcha
     }
 
     public String getPipedMessageExchangeId() {
-        return _hself.getPipedMessageExchange();
+        return _hself.getPipedMessageExchangeId();
     }
 
-    public long getTimeout() {
-        return _hself.getTimeout();
+    public void setPipedMessageExchangeId(String mexId) {
+        entering("MessageExchangeDaoImpl.setPipedMessageExchangeId");
+        _hself.setPipedMessageExchangeId(mexId);
     }
 
-    public void setFailureType(FailureType failureType) {
-        _hself.setFailureType(failureType == null ? null : failureType.toString());
+    public int getSubscriberCount() {
+        return _hself.getSubscriberCount();
     }
     
-    public FailureType getFailureType() {
-        return _hself.getFailureType() == null ? null : FailureType.valueOf(_hself.getFailureType());
-
+    public void setSubscriberCount(int subscriberCount) {
+        _hself.setSubscriberCount(subscriberCount);        
+    }
+    
+    public void release(boolean doClean) {
+        if( doClean ) {
+            deleteMessages();
+        }
     }
 
-    public void setInvocationStyle(InvocationStyle invocationStyle) {
-        _hself.setInvocationStyle(invocationStyle == null ? null : invocationStyle.toString());
+    @SuppressWarnings("unchecked")
+    public void releasePremieMessages() {
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX).setParameter("mex", _hself).list());
+        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
     }
 
-    public void setPipedMessageExchangeId(String pipedMex) {
-      entering("MessageExchangeDaoImpl.setPipedMessageExchangeId");
-        _hself.setPipedMessageExchange(pipedMex);
+    public void incrementSubscriberCount() {
+        _hself.incrementSubscriberCount();
     }
-
-    public void setTimeout(long timeout) {
-        _hself.setTimeout(timeout);
-    }
-
-    public AckType getAckType() {
-        return _hself.getAckType() == null ? null : AckType.valueOf(_hself.getAckType());
-    }
-
-    public void setAckType(AckType ackType) {
-        _hself.setAckType(ackType == null ? null : ackType.toString());
-    }
-
-    public QName getPipedPID() {
-        return _hself.getPipedPID() == null ? null : QName.valueOf(_hself.getPipedPID());
-    }
-
-    public void setPipedPID(QName pipedPid) {
-        _hself.setPipedPID(pipedPid == null ? null : pipedPid.toString());
-        
-    }
-
-    public void setResource(String resource) {
-        _hself.setResource(resource);
-    }
-
-    public String getResource() {
-        return _hself.getResource();
-    }
-
-    public boolean isInstantiatingResource() {
-        return _hself.isInstantiatingResource();
-    }
-
-    public void setInstantiatingResource(boolean inst) {
-        _hself.setInstantiatingResource(inst);
+    
+    @SuppressWarnings("unchecked")
+    public void deleteMessages() {
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX).setParameter("mex", _hself).list());
+        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
+          
+        getSession().delete(_hself);
+        // This deletes endpoint LData, callbackEndpoint LData, request HMessage, response HMessage, HMessageExchangeProperty 
     }
 }
