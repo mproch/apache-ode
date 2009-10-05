@@ -362,62 +362,6 @@ public class ProcessInstanceDaoImpl extends HibernateDao implements ProcessInsta
         return instanceDeleted;
     }
     
-    private void deleteInstances(HProcessInstance[] instances) {
-        getSession().getNamedQuery(HLargeData.DELETE_FAULT_LDATA_BY_INSTANCE_IDS).setParameterList("instanceIds", HObject.toIdArray(instances)).executeUpdate();
-        getSession().getNamedQuery(HFaultData.DELETE_FAULTS_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-
-        getSession().delete(_instance); // this deletes JcobState, HActivityRecovery -> ActivityRecovery-LData
-    }
-
-    private void deleteVariables(HProcessInstance[] instances) {
-        getSession().getNamedQuery(HCorrelationProperty.DELETE_CORPROPS_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-        getSession().getNamedQuery(HCorrelationSet.DELETE_CORSETS_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-
-        getSession().getNamedQuery(HVariableProperty.DELETE_VARIABLE_PROPERITES_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-        getSession().getNamedQuery(HLargeData.DELETE_XMLDATA_LDATA_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-        getSession().getNamedQuery(HXmlData.DELETE_XMLDATA_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-
-        getSession().getNamedQuery(HLargeData.DELETE_PARTNER_LINK_LDATA_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-        getSession().getNamedQuery(HPartnerLink.DELETE_PARTNER_LINKS_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-
-        getSession().getNamedQuery(HScope.DELETE_SCOPES_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void deleteMessages(HProcessInstance[] instances) {
-        // there are chances that some unmatched messages are still there
-        getSession().getNamedQuery(HLargeData.DELETE_UNMATCHED_MESSAGE_LDATA_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-        Collection unmatchedMex = getSession().getNamedQuery(HMessageExchange.SELECT_UNMATCHED_MEX_BY_INSTANCES).setParameterList("instances", instances).list();
-        if( !unmatchedMex.isEmpty() ) {
-          getSession().delete(unmatchedMex);
-//        getSession().getNamedQuery(HMessageExchange.DELETE_UNMATCHED_MEX).setParameter("mex", unmatchedMex).executeUpdate();
-        }
-        getSession().getNamedQuery(HCorrelatorMessage.DELETE_CORMESSAGES_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-
-        getSession().getNamedQuery(HCorrelatorSelector.DELETE_MESSAGE_ROUTES_BY_INSTANCES).setParameterList("instances", instances).executeUpdate();
-    }
-      
-    if( cleanupCategories.contains(CLEANUP_CATEGORY.CORRELATIONS) ) {
-      deleteCorrelations(instances);
-    }
-
-    if( cleanupCategories.contains(CLEANUP_CATEGORY.MESSAGES) ) {
-      deleteMessages(instances);
-    }
-      
-    if( cleanupCategories.contains(CLEANUP_CATEGORY.VARIABLES) ) {
-      deleteVariables(instances);
-    }
-      
-    if( cleanupCategories.contains(CLEANUP_CATEGORY.INSTANCE) ) {
-      deleteInstances(instances);
-    }
-
-    getSession().flush();
-      
-    if(__log.isDebugEnabled()) __log.debug("Instance data cleaned up and flushed.");
-  }
-  
   @SuppressWarnings("unchecked")
   private void deleteInstances(HProcessInstance[] instances) {
     deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_FAULT_LDATA_IDS_BY_INSTANCE_IDS).setParameterList("instanceIds", HObject.toIdArray(instances)).list());
@@ -561,18 +505,6 @@ public class ProcessInstanceDaoImpl extends HibernateDao implements ProcessInsta
     _instance.setActivityFailureCount(_instance.getActivityFailureCount() + 1);
     getSession().update(_instance);
   }
-
-  /**
-   * Delete previously registered activity recovery.
-   */
-  public void deleteActivityRecovery(String channel) {
-      entering("ProcessInstanceDaoImpl.deleteActivityRecovery");
-    for (HActivityRecovery recovery : _instance.getActivityRecoveries()) {
-      if (recovery.getChannel().equals(channel)) {
-        getSession().delete(recovery);
-        _instance.setActivityFailureCount(_instance.getActivityFailureCount() - 1);
-        getSession().update(_instance);
-    }
 
     /**
      * Delete previously registered activity recovery.

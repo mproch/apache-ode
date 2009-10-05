@@ -36,6 +36,8 @@ import org.apache.ode.bpel.iapi.MessageExchange.AckType;
 import org.apache.ode.bpel.iapi.MessageExchange.FailureType;
 import org.apache.ode.bpel.iapi.MessageExchange.MessageExchangePattern;
 import org.apache.ode.bpel.iapi.MessageExchange.Status;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ode.daohib.SessionManager;
 import org.apache.ode.daohib.bpel.hobj.HCorrelatorMessage;
 import org.apache.ode.daohib.bpel.hobj.HLargeData;
@@ -348,10 +350,19 @@ public class MessageExchangeDaoImpl extends HibernateDao implements
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public void releasePremieMessages() {
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_1).setParameter("mex", _hself).list());
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_2).setParameter("mex", _hself).list());
+        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
+    }
+
+    @SuppressWarnings("unchecked")
     public void deleteMessages() {
-        getSession().getNamedQuery(HLargeData.DELETE_MESSAGE_LDATA_BY_MEX).setParameter("mex", _hself).executeUpdate();
-        getSession().getNamedQuery(HCorrelatorMessage.DELETE_CORMESSAGES_BY_MEX).setParameter("mex", _hself).executeUpdate();
-        
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_1).setParameter("mex", _hself).list());
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_2).setParameter("mex", _hself).list());
+        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
+          
         getSession().delete(_hself);
         // This deletes endpoint LData, callbackEndpoint LData, request HMessage, response HMessage, HMessageExchangeProperty 
     }
@@ -365,46 +376,65 @@ public class MessageExchangeDaoImpl extends HibernateDao implements
     }
 
     public String getPipedMessageExchangeId() {
-        return _hself.getPipedMessageExchangeId();
+        return _hself.getPipedMessageExchange();
     }
 
-    public void setPipedMessageExchangeId(String mexId) {
-        entering("MessageExchangeDaoImpl.setPipedMessageExchangeId");
-        _hself.setPipedMessageExchangeId(mexId);
+    public long getTimeout() {
+        return _hself.getTimeout();
     }
 
-    public int getSubscriberCount() {
-        return _hself.getSubscriberCount();
+    public void setFailureType(FailureType failureType) {
+        _hself.setFailureType(failureType == null ? null : failureType.toString());
     }
     
-    public void setSubscriberCount(int subscriberCount) {
-        _hself.setSubscriberCount(subscriberCount);        
-    }
-    
-    public void release(boolean doClean) {
-        if( doClean ) {
-            deleteMessages();
-        }
+    public FailureType getFailureType() {
+        return _hself.getFailureType() == null ? null : FailureType.valueOf(_hself.getFailureType());
+
     }
 
-    @SuppressWarnings("unchecked")
-    public void releasePremieMessages() {
-        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_1).setParameter("mex", _hself).list());
-        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_2).setParameter("mex", _hself).list());
-        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
+    public void setInvocationStyle(InvocationStyle invocationStyle) {
+        _hself.setInvocationStyle(invocationStyle == null ? null : invocationStyle.toString());
     }
 
-    public void incrementSubscriberCount() {
-        _hself.incrementSubscriberCount();
+    public void setPipedMessageExchangeId(String pipedMex) {
+      entering("MessageExchangeDaoImpl.setPipedMessageExchangeId");
+        _hself.setPipedMessageExchange(pipedMex);
     }
-    
-    @SuppressWarnings("unchecked")
-    public void deleteMessages() {
-        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_1).setParameter("mex", _hself).list());
-        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_MEX_2).setParameter("mex", _hself).list());
-        deleteByIds(HCorrelatorMessage.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_MEX).setParameter("mex", _hself).list());
-          
-        getSession().delete(_hself);
-        // This deletes endpoint LData, callbackEndpoint LData, request HMessage, response HMessage, HMessageExchangeProperty 
+
+    public void setTimeout(long timeout) {
+        _hself.setTimeout(timeout);
+    }
+
+    public AckType getAckType() {
+        return _hself.getAckType() == null ? null : AckType.valueOf(_hself.getAckType());
+    }
+
+    public void setAckType(AckType ackType) {
+        _hself.setAckType(ackType == null ? null : ackType.toString());
+    }
+
+    public QName getPipedPID() {
+        return _hself.getPipedPID() == null ? null : QName.valueOf(_hself.getPipedPID());
+    }
+
+    public void setPipedPID(QName pipedPid) {
+        _hself.setPipedPID(pipedPid == null ? null : pipedPid.toString());
+        
+    }
+
+    public void setResource(String resource) {
+        _hself.setResource(resource);
+    }
+
+    public String getResource() {
+        return _hself.getResource();
+    }
+
+    public boolean isInstantiatingResource() {
+        return _hself.isInstantiatingResource();
+    }
+
+    public void setInstantiatingResource(boolean inst) {
+        _hself.setInstantiatingResource(inst);
     }
 }

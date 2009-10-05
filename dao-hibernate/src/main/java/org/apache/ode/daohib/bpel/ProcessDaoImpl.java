@@ -60,11 +60,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
-<<<<<<< HEAD:dao-hibernate/src/main/java/org/apache/ode/daohib/bpel/ProcessDaoImpl.java
-=======
 import java.util.ArrayList;
 import java.util.List;
->>>>>>> b1c43ac... ode-632, Reduce db deadlocks by getting rid of delete statements that use index:dao-hibernate/src/main/java/org/apache/ode/daohib/bpel/ProcessDaoImpl.java
 import java.util.Set;
 
 /**
@@ -259,7 +256,10 @@ public class ProcessDaoImpl extends HibernateDao implements ProcessDAO, Deferred
         deleteByIds(HActivityRecovery.class, getSession().getNamedQuery(HCorrelatorMessage.SELECT_CORMESSAGE_IDS_BY_INSTANCES).setParameterList("instances", instances).list());
         deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_INSTANCES_1).setParameterList("instances", instances).list());
         deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_INSTANCES_2).setParameterList("instances", instances).list());
-        deleteByIds(HMessage.class, getSession().getNamedQuery(HMessage.SELECT_MESSAGE_IDS_BY_INSTANCES).setParameterList("instances", instances).list());
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_INSTANCES_3).setParameterList("instances", instances).list());
+        deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MESSAGE_LDATA_IDS_BY_INSTANCES_4).setParameterList("instances", instances).list());
+        deleteByIds(HMessage.class, getSession().getNamedQuery(HMessage.SELECT_MESSAGE_IDS_BY_INSTANCES_1).setParameterList("instances", instances).list());
+        deleteByIds(HMessage.class, getSession().getNamedQuery(HMessage.SELECT_MESSAGE_IDS_BY_INSTANCES_2).setParameterList("instances", instances).list());
         deleteByIds(HMessageExchangeProperty.class, getSession().getNamedQuery(HMessageExchangeProperty.SELECT_MEX_PROPS_IDS_BY_INSTANCES).setParameterList("instances", instances).list());
         deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MEX_LDATA_IDS_BY_INSTANCES_1).setParameterList("instances", instances).list());
         deleteByIds(HLargeData.class, getSession().getNamedQuery(HLargeData.SELECT_MEX_LDATA_IDS_BY_INSTANCES_2).setParameterList("instances", instances).list());

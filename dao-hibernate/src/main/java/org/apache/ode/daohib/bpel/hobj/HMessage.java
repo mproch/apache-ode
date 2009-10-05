@@ -23,12 +23,16 @@ package org.apache.ode.daohib.bpel.hobj;
  * Hibernate-managed table for keeping track of messages.
  *
  * @hibernate.class table="BPEL_MESSAGE"
- * @hibernate.query name="SELECT_MESSAGE_IDS_BY_MEX" query="select id from HMessage as m WHERE m.messageExchange = :messageExchange"
- * @hibernate.query name="SELECT_MESSAGE_IDS_BY_INSTANCES" query="select m.id from HMessage m, HMessageExchange mex WHERE m.messageExchange = mex and mex.instance in (:instances)"
+ * @hibernate.query name="SELECT_MESSAGE_IDS_BY_MEX_1" query="select mex.request.id from HMessageExchange mex WHERE mex = :messageExchange and mex.request is not null"
+ * @hibernate.query name="SELECT_MESSAGE_IDS_BY_MEX_2" query="select mex.response.id from HMessageExchange mex WHERE mex = :messageExchange and mex.response is not null"
+ * @hibernate.query name="SELECT_MESSAGE_IDS_BY_INSTANCES_1" query="select mex.request.id from HMessageExchange mex WHERE mex.instance in (:instances) and mex.request.id is not null"
+ * @hibernate.query name="SELECT_MESSAGE_IDS_BY_INSTANCES_2" query="select mex.response.id from HMessageExchange mex WHERE mex.instance in (:instances) and mex.response.id is not null"
  */
 public class HMessage extends HObject {
-    public final static String SELECT_MESSAGE_IDS_BY_MEX = "SELECT_MESSAGE_IDS_BY_MEX";
-    public final static String SELECT_MESSAGE_IDS_BY_INSTANCES = "SELECT_MESSAGE_IDS_BY_INSTANCES";
+    public final static String SELECT_MESSAGE_IDS_BY_MEX_1 = "SELECT_MESSAGE_IDS_BY_MEX_1";
+    public final static String SELECT_MESSAGE_IDS_BY_MEX_2 = "SELECT_MESSAGE_IDS_BY_MEX_2";
+    public final static String SELECT_MESSAGE_IDS_BY_INSTANCES_1 = "SELECT_MESSAGE_IDS_BY_INSTANCES_1";
+    public final static String SELECT_MESSAGE_IDS_BY_INSTANCES_2 = "SELECT_MESSAGE_IDS_BY_INSTANCES_2";
 
     private String _type;
     private HLargeData _data;
