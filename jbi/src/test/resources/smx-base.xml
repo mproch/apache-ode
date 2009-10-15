@@ -53,14 +53,14 @@
             connectionTracker="#connectionTracker" 
             />
 
-    <bean id="localDerbyMCF" class="org.tranql.connector.derby.EmbeddedXAMCF">
+    <bean id="odeDerbyMCF" class="org.tranql.connector.derby.EmbeddedLocalMCF">
       <property name="databaseName" value="target/test/smx/ode/hibdb"/>
       <property name="createDatabase" value="false"/>
     <property name="userName" value = "sa"/>
         <property name="password" value = ""/>
   </bean>
-  <bean id="odeDS" class="org.springframework.jca.support.LocalConnectionFactoryBean">
-      <property name="managedConnectionFactory" ref="localDerbyMCF"/>
+  <bean id="odeDS" class="org.jencks.factory.ConnectionFactoryFactoryBean">
+      <property name="managedConnectionFactory" ref="odeDerbyMCF"/>
       <property name="connectionManager" ref="connectionManager"/>
   </bean>
   
