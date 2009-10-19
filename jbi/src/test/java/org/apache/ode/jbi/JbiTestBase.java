@@ -107,20 +107,33 @@ public class JbiTestBase extends SpringTestSupport {
 
 
     protected void go() throws Exception {
-        enableProcess(getTestName(), true);
+        boolean manualDeploy = Boolean.parseBoolean("" + testProperties.getProperty("manualDeploy"));
+        if (!manualDeploy) 
+            enableProcess(getTestName(), true);
 
         int i = 0;
-        while (true) {
+        boolean loop;
+        do {
             String prefix = i == 0 ? "" : "" + i;
+            loop = i == 0;
+
+            {
+                String deploy = testProperties.getProperty(prefix + "deploy");
+                if (deploy != null) {
+                    loop = true;
+                    enableProcess(getTestName() + "/" + deploy, true);
+                }
+            }
+            {
+                String undeploy = testProperties.getProperty(prefix + "undeploy");
+                if (undeploy != null) {
+                    loop = true;
+                    enableProcess(getTestName() + "/" + undeploy, false);
+                }
+            }
             
             String request = testProperties.getProperty(prefix + "request");
-            if (request == null) {
-                if (i == 0) {
-                    i++;
-                    continue;
-                } else break;
-            }
-            if (request.startsWith("@")) {
+            if (request != null && request.startsWith("@")) {
                 request = inputStreamToString(getClass().getResourceAsStream("/" + getTestName() + "/" + request.substring(1)));
             }
             String expectedResponse = testProperties.getProperty(prefix + "response");
@@ -135,7 +148,8 @@ public class JbiTestBase extends SpringTestSupport {
             }
             {
     	        String httpUrl = testProperties.getProperty(prefix + "http.url");
-    	        if (httpUrl != null) {
+    	        if (httpUrl != null && request != null) {
+                    loop = true;
     	            log.debug(getTestName() + " sending http request to " + httpUrl + " request: " + request);
     	            URLConnection connection = new URL(httpUrl).openConnection();
     	            connection.setDoOutput(true);
@@ -170,24 +184,10 @@ public class JbiTestBase extends SpringTestSupport {
             }
             
             i++;
-        }
-        {
-	        if (testProperties.getProperty("nmr.service") != null) {
-	            DefaultServiceMixClient client = new DefaultServiceMixClient(jbiContainer);
-	            InOut io = client.createInOutExchange();
-	            io.setService(QName.valueOf(testProperties.getProperty("nmr.service")));
-	            io.setOperation(QName.valueOf(testProperties.getProperty("nmr.operation")));
-	            io.getInMessage().setContent(new StreamSource(new ByteArrayInputStream(request.getBytes())));
-	            client.sendSync(io,20000);
-	            assertEquals(ExchangeStatus.ACTIVE,io.getStatus());
-	            assertNotNull(io.getOutMessage());
-	            String result = new SourceTransformer().contentToString(io.getOutMessage());
-	            matchResponse(expectedResponse, result);
-	            client.done(io);
-	        }
-        }	
+        } while (loop);
         
-        enableProcess(getTestName(), false);
+        if (!manualDeploy)
+            enableProcess(getTestName(), false);
     }
     
     protected void matchResponse(String expectedResponse, String result) {
