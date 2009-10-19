@@ -19,6 +19,8 @@
 
 package org.apache.ode.dao.jpa;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ode.bpel.dao.MessageDAO;
 import org.apache.ode.bpel.dao.MessageExchangeDAO;
 import org.apache.ode.utils.DOMUtils;
@@ -44,6 +46,7 @@ import javax.xml.namespace.QName;
 @Table(name = "ODE_MESSAGE")
 @NamedQueries( { @NamedQuery(name = MessageDAOImpl.DELETE_MESSAGES_BY_PROCESS, query = "delete from MessageDAOImpl as m where m._messageExchange._process = :process") })
 public class MessageDAOImpl implements MessageDAO {
+    private static Log __log = LogFactory.getLog(MessageDAOImpl.class);
     public final static String DELETE_MESSAGES_BY_PROCESS = "DELETE_MESSAGES_BY_PROCESS";
 
     @Id
@@ -77,6 +80,9 @@ public class MessageDAOImpl implements MessageDAO {
     }
 
     public Element getData() {
+        if (__log.isDebugEnabled()) {
+            __log.debug("getData " + _id + " " + _data);
+        }
         if (_element == null && _data != null && !"".equals(_data)) {
             try {
                 _element = DOMUtils.stringToDOM(_data);
@@ -88,10 +94,18 @@ public class MessageDAOImpl implements MessageDAO {
     }
 
     public void setData(Element value) {
-        if (value == null)
+        if (value == null) {
+            if (__log.isDebugEnabled()) {
+                __log.debug("setData " + _id + " null");
+            }
             return;
+        }
         _data = DOMUtils.domToString(value);
         _element = value;
+        
+        if (__log.isDebugEnabled()) {
+            __log.debug("setData " + _id + " " + _data);
+        }
     }
 
     public Element getHeader() {
