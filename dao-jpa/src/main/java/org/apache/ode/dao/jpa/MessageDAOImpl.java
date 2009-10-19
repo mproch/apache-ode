@@ -19,7 +19,6 @@
 
 package org.apache.ode.dao.jpa;
 
-
 import org.apache.ode.bpel.dao.MessageDAO;
 import org.apache.ode.bpel.dao.MessageExchangeDAO;
 import org.apache.ode.utils.DOMUtils;
@@ -42,71 +41,76 @@ import javax.persistence.Transient;
 import javax.xml.namespace.QName;
 
 @Entity
-@Table(name="ODE_MESSAGE")
-@NamedQueries({
-	@NamedQuery(name=MessageDAOImpl.DELETE_MESSAGES_BY_PROCESS, query="delete from MessageDAOImpl as m where m._messageExchange._process = :process")
-})
+@Table(name = "ODE_MESSAGE")
+@NamedQueries( { @NamedQuery(name = MessageDAOImpl.DELETE_MESSAGES_BY_PROCESS, query = "delete from MessageDAOImpl as m where m._messageExchange._process = :process") })
 public class MessageDAOImpl implements MessageDAO {
-	public final static String DELETE_MESSAGES_BY_PROCESS = "DELETE_MESSAGES_BY_PROCESS";
-	
-	@Id @Column(name="MESSAGE_ID") 
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@SuppressWarnings("unused")
-	private Long _id;
-	@Basic @Column(name="TYPE")
+    public final static String DELETE_MESSAGES_BY_PROCESS = "DELETE_MESSAGES_BY_PROCESS";
+
+    @Id
+    @Column(name = "MESSAGE_ID")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @SuppressWarnings("unused")
+    private Long _id;
+    @Basic
+    @Column(name = "TYPE")
     private String _type;
-	@Lob @Column(name="DATA")
+    @Lob
+    @Column(name = "DATA")
     private String _data;
-	@Lob @Column(name="HEADER")
+    @Lob
+    @Column(name = "HEADER")
     private String _header;
-	@Transient
+    @Transient
     private Element _element;
-	@Transient
+    @Transient
     private Element _headerElement;
-	@ManyToOne(fetch=FetchType.LAZY,cascade={CascadeType.ALL}) @Column(name="MESSAGE_EXCHANGE_ID")
-	private MessageExchangeDAOImpl _messageExchange;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.ALL })
+    @Column(name = "MESSAGE_EXCHANGE_ID")
+    private MessageExchangeDAOImpl _messageExchange;
 
-	public MessageDAOImpl() {
-	}
-	
-	public MessageDAOImpl(QName type, MessageExchangeDAOImpl me) {
-		_type = type.toString();
-		_messageExchange = me;
-	}
-	
-	public Element getData() {
-		if ( _element == null && _data != null && !"".equals(_data)) {
-			try {
-				_element = DOMUtils.stringToDOM(_data);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return _element;
-	}
+    public MessageDAOImpl() {
+    }
 
-	public void setData(Element value) {
-        if (value == null) return;
+    public MessageDAOImpl(QName type, MessageExchangeDAOImpl me) {
+        _type = type.toString();
+        _messageExchange = me;
+    }
+
+    public Element getData() {
+        if (_element == null && _data != null && !"".equals(_data)) {
+            try {
+                _element = DOMUtils.stringToDOM(_data);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return _element;
+    }
+
+    public void setData(Element value) {
+        if (value == null)
+            return;
         _data = DOMUtils.domToString(value);
-		_element = value;
-	}
+        _element = value;
+    }
 
-	public Element getHeader() {
-		if ( _headerElement == null && _header != null && !"".equals(_header)) {
-			try {
-				_headerElement = DOMUtils.stringToDOM(_header);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		return _headerElement;
-	}
+    public Element getHeader() {
+        if (_headerElement == null && _header != null && !"".equals(_header)) {
+            try {
+                _headerElement = DOMUtils.stringToDOM(_header);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return _headerElement;
+    }
 
-	public void setHeader(Element value) {
-        if (value == null) return;
+    public void setHeader(Element value) {
+        if (value == null)
+            return;
         _header = DOMUtils.domToString(value);
-		_headerElement = value;
-	}
+        _headerElement = value;
+    }
 
     public MessageExchangeDAO getMessageExchange() {
         return _messageExchange;
@@ -116,8 +120,8 @@ public class MessageDAOImpl implements MessageDAO {
         return _type == null ? null : QName.valueOf(_type);
     }
 
-	public void setType(QName type) {
-		_type = type.toString();
-	}
+    public void setType(QName type) {
+        _type = type.toString();
+    }
 
 }
