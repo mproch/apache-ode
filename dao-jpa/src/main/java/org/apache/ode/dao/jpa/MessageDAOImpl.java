@@ -63,10 +63,6 @@ public class MessageDAOImpl implements MessageDAO {
     @Lob
     @Column(name = "HEADER")
     private String _header;
-    @Transient
-    private Element _element;
-    @Transient
-    private Element _headerElement;
     @ManyToOne(fetch = FetchType.LAZY, cascade = { CascadeType.ALL })
     @Column(name = "MESSAGE_EXCHANGE_ID")
     private MessageExchangeDAOImpl _messageExchange;
@@ -83,14 +79,11 @@ public class MessageDAOImpl implements MessageDAO {
         if (__log.isDebugEnabled()) {
             __log.debug("getData " + _id + " " + _data);
         }
-        if (_element == null && _data != null && !"".equals(_data)) {
-            try {
-                _element = DOMUtils.stringToDOM(_data);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            return _data == null ? null : DOMUtils.stringToDOM(_data);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return _element;
     }
 
     public void setData(Element value) {
@@ -101,7 +94,6 @@ public class MessageDAOImpl implements MessageDAO {
             return;
         }
         _data = DOMUtils.domToString(value);
-        _element = value;
         
         if (__log.isDebugEnabled()) {
             __log.debug("setData " + _id + " " + _data);
@@ -109,21 +101,17 @@ public class MessageDAOImpl implements MessageDAO {
     }
 
     public Element getHeader() {
-        if (_headerElement == null && _header != null && !"".equals(_header)) {
-            try {
-                _headerElement = DOMUtils.stringToDOM(_header);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            return _header == null ? null : DOMUtils.stringToDOM(_header);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return _headerElement;
     }
 
     public void setHeader(Element value) {
         if (value == null)
             return;
         _header = DOMUtils.domToString(value);
-        _headerElement = value;
     }
 
     public MessageExchangeDAO getMessageExchange() {
