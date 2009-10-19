@@ -20,6 +20,7 @@ package org.apache.ode.bpel.rtrep.v2;
 
 import org.apache.ode.bpel.common.FaultException;
 import org.apache.ode.bpel.rtrep.v2.channels.*;
+import org.apache.ode.jacob.ChannelListener;
 import org.apache.ode.jacob.SynchChannel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -218,7 +219,7 @@ class EH_ALARM extends BpelJacobRunnable {
                             //propagate completion into bounding scope only if we got fault during processing onAlarm
                             _psc.completed(faultData, _comps);
                         } else {
-                            instance(new WAIT(null));
+                            instance(new WAIT(null, _scopeFrame));
                         }
                     }
                 }
