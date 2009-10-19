@@ -53,14 +53,25 @@
             connectionTracker="#connectionTracker" 
             />
 
-    <bean id="odeDerbyMCF" class="org.tranql.connector.derby.EmbeddedLocalMCF">
+    <bean id="odeMCF" class="org.tranql.connector.derby.EmbeddedLocalMCF">
       <property name="databaseName" value="target/test/smx/ode/hibdb"/>
       <property name="createDatabase" value="false"/>
     <property name="userName" value = "sa"/>
         <property name="password" value = ""/>
   </bean>
+    <!-- 
+   <bean id="odeMCF" class="org.tranql.connector.oracle.LocalMCF">
+    <property name="databaseName" value="XE"/>
+    <property name="userName" value="ode12"/>
+    <property name="password" value="ode12"/>
+    <property name="portNumber" value="1521"/>
+    <property name="serverName" value="localhost"/>
+    <property name="driverType" value="thin"/>
+  </bean>
+   -->
+   
   <bean id="odeDS" class="org.jencks.factory.ConnectionFactoryFactoryBean">
-      <property name="managedConnectionFactory" ref="odeDerbyMCF"/>
+      <property name="managedConnectionFactory" ref="odeMCF"/>
       <property name="connectionManager" ref="connectionManager"/>
   </bean>
   

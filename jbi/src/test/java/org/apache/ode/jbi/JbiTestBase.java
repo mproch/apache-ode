@@ -54,6 +54,7 @@ public class JbiTestBase extends SpringTestSupport {
     protected JBIContainer jbiContainer;
 
     protected Properties testProperties;
+    protected DefaultServiceMixClient smxClient;
     
     @Override
     protected AbstractXmlApplicationContext createBeanFactory() {
@@ -78,6 +79,8 @@ public class JbiTestBase extends SpringTestSupport {
         
         testProperties = new Properties();
         testProperties.load(getClass().getResourceAsStream("/" + getTestName() + "/test.properties"));
+        
+        smxClient = new DefaultServiceMixClient(jbiContainer);
     }
     
     protected String getTestName() {
@@ -106,29 +109,67 @@ public class JbiTestBase extends SpringTestSupport {
     protected void go() throws Exception {
         enableProcess(getTestName(), true);
 
-        String request = testProperties.getProperty("request");
-        String expectedResponse = testProperties.getProperty("response");
-        {
-	        String httpUrl = testProperties.getProperty("http.url");
-	        if (httpUrl != null) {
-	            log.debug(getTestName() + " sending http request to " + httpUrl + " request: " + request);
-	            URLConnection connection = new URL(httpUrl).openConnection();
-	            connection.setDoOutput(true);
-	            connection.setDoInput(true);
-	            //Send request
-	            OutputStream os = connection.getOutputStream();
-	            PrintWriter wt = new PrintWriter(os);
-	            wt.print(request);
-	            wt.flush();
-	            wt.close();
-	            // Read the response.
-	            InputStream is = connection.getInputStream();
-	            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	            FileUtil.copyInputStream(is, baos);
-	            String result = baos.toString();
-	            log.debug(getTestName() + " have result: " + result);
-	            matchResponse(expectedResponse, result);
-	        }
+        int i = 0;
+        while (true) {
+            String prefix = i == 0 ? "" : "" + i;
+            
+            String request = testProperties.getProperty(prefix + "request");
+            if (request == null) {
+                if (i == 0) {
+                    i++;
+                    continue;
+                } else break;
+            }
+            if (request.startsWith("@")) {
+                request = inputStreamToString(getClass().getResourceAsStream("/" + getTestName() + "/" + request.substring(1)));
+            }
+            String expectedResponse = testProperties.getProperty(prefix + "response");
+            {
+                String delay = testProperties.getProperty(prefix + "delay");
+                if (delay != null) {
+                    loop = true;
+                    long d = Long.parseLong(delay);
+                    log.debug("Sleeping " + d + " ms");
+                    Thread.sleep(d);
+                }
+            }
+            {
+    	        String httpUrl = testProperties.getProperty(prefix + "http.url");
+    	        if (httpUrl != null) {
+    	            log.debug(getTestName() + " sending http request to " + httpUrl + " request: " + request);
+    	            URLConnection connection = new URL(httpUrl).openConnection();
+    	            connection.setDoOutput(true);
+    	            connection.setDoInput(true);
+    	            //Send request
+    	            OutputStream os = connection.getOutputStream();
+    	            PrintWriter wt = new PrintWriter(os);
+    	            wt.print(request);
+    	            wt.flush();
+    	            wt.close();
+    	            // Read the response.
+    	            String result = inputStreamToString(connection.getInputStream());
+    	            
+    	            log.debug(getTestName() + " have result: " + result);
+    	            matchResponse(expectedResponse, result);
+    	        }
+            }
+            {
+    	        if (testProperties.getProperty(prefix + "nmr.service") != null && request != null) {
+                    loop = true;
+    	            InOut io = smxClient.createInOutExchange();
+    	            io.setService(QName.valueOf(testProperties.getProperty(prefix + "nmr.service")));
+    	            io.setOperation(QName.valueOf(testProperties.getProperty(prefix + "nmr.operation")));
+    	            io.getInMessage().setContent(new StreamSource(new ByteArrayInputStream(request.getBytes())));
+    	            smxClient.sendSync(io,20000);
+    	            assertEquals(ExchangeStatus.ACTIVE,io.getStatus());
+    	            assertNotNull(io.getOutMessage());
+    	            String result = new SourceTransformer().contentToString(io.getOutMessage());
+    	            matchResponse(expectedResponse, result);
+    	            smxClient.done(io);
+    	        }
+            }
+            
+            i++;
         }
         {
 	        if (testProperties.getProperty("nmr.service") != null) {
