@@ -57,7 +57,10 @@ public class JbiTestBase extends SpringTestSupport {
     
     @Override
     protected AbstractXmlApplicationContext createBeanFactory() {
-        return new ClassPathXmlApplicationContext("/" + getTestName() + "/smx.xml");
+        return new ClassPathXmlApplicationContext(new String[] {
+            "/smx-base.xml",
+            "/" + getTestName() + "/smx.xml"
+        });
     }
     
     @Override
