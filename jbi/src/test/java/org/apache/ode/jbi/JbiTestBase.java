@@ -19,6 +19,7 @@ package org.apache.ode.jbi;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -52,7 +53,7 @@ public class JbiTestBase extends SpringTestSupport {
 
     protected OdeComponent odeComponent;
     protected JBIContainer jbiContainer;
-
+    
     protected Properties testProperties;
     protected DefaultServiceMixClient smxClient;
     
@@ -192,5 +193,11 @@ public class JbiTestBase extends SpringTestSupport {
     
     protected void matchResponse(String expectedResponse, String result) {
         assertTrue("Response doesn't match expected regex.\nExpected: " + expectedResponse + "\nReceived: " + result, Pattern.compile(expectedResponse, Pattern.DOTALL).matcher(result).matches());
+    }
+    
+    private String inputStreamToString(InputStream is) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        FileUtil.copyInputStream(is, baos);
+        return baos.toString();
     }
 }
