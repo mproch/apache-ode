@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -448,7 +449,7 @@ public class BpelServerImpl implements BpelServer, Scheduler.JobProcessor {
             try {
                 while (true) {
                     Thread.sleep(pollingTime);
-                    _mngmtLock.writeLock().lockInterruptibly();
+                    if (!_mngmtLock.writeLock().tryLock(100L, TimeUnit.MILLISECONDS)) continue;
                     try { 
                         __log.debug("Kicking reaper, OProcess instances: " + OProcess.instanceCount);
                         // Copying the runnning process list to avoid synchronization

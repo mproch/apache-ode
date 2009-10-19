@@ -24,7 +24,6 @@ import java.net.URI;
 import java.util.*;
 
 import javax.wsdl.Operation;
-import javax.wsdl.OperationType;
 import javax.xml.namespace.QName;
 
 import org.apache.commons.logging.Log;
@@ -228,7 +227,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
             public void afterCompletion(boolean success) {
             }
             public void beforeCompletion() { 
-                _dao.delete(_bpelProcess.getCleanupCategories(false));
+                _dao.delete(_bpelProcess.getCleanupCategories(false), false);
             }
         });
     }
@@ -257,7 +256,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
             public void afterCompletion(boolean success) {
             }
             public void beforeCompletion() { 
-                _dao.delete(_bpelProcess.getCleanupCategories(true));
+                _dao.delete(_bpelProcess.getCleanupCategories(true), false);
             }
         });
     }
@@ -1275,10 +1274,14 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         MessageExchangeDAO dao = _dao.getConnection().getMessageExchange(mexId);
         dao.release(_bpelProcess.isCleanupCategoryEnabled(instanceSucceeded, CLEANUP_CATEGORY.MESSAGES) );
 
-        // Canceling invocation check job
+        // We used to cancel the invoke check job here but it turns out
+        // it creates more contention on the ODE_JOB table.  It's better
+        // just to let the job get scheduled and discarded quietly
+        /*
         String jobId = dao.getProperty("invokeCheckJobId");
         if (jobId != null)
             _bpelProcess._engine._contexts.scheduler.cancelJob(jobId);
+        */
     }
 
 
@@ -1311,18 +1314,6 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         __log.info("ActivityRecovery: Registering activity " + activityId + ", failure reason: " + reason +
                 " on channel " + channel.export());
         _dao.createActivityRecovery(channel.export(), (int) activityId, reason, dateTime, details, actions, retries);
-        // Release and fail any outstanding request
-        String[] mexRefs = _outstandingRequests.releaseAll();
-        if(mexRefs!=null){
-            for(String mexRef:mexRefs){
-                MessageExchangeDAO mexDao = _dao.getConnection().getMessageExchange(mexRef);
-                if (mexDao !=null) {
-                    MyRoleMessageExchangeImpl mex = new MyRoleMessageExchangeImpl(_bpelProcess, _bpelProcess._engine, mexDao);
-                    _bpelProcess.initMyRoleMex(mex);
-                    mex.setFailure(FailureType.OTHER, reason, details);
-                }
-            }
-        }
     }
 
     public void unregisterActivityForRecovery(ActivityRecoveryChannel channel) {

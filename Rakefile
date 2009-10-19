@@ -329,7 +329,7 @@ define "ode" do
     compile.with projects("bpel-api", "utils"), COMMONS.collections, COMMONS.logging, JAVAX.transaction, LOG4J
     test.compile.with HSQLDB, GERONIMO.kernel, GERONIMO.transaction
     test.with HSQLDB, JAVAX.transaction, JAVAX.resource, JAVAX.connector, LOG4J,
-          GERONIMO.kernel, GERONIMO.transaction, BACKPORT, JAVAX.ejb
+          GERONIMO.kernel, GERONIMO.transaction, GERONIMO.connector, TRANQL, BACKPORT, JAVAX.ejb
     package :jar
   end
 
@@ -379,14 +379,15 @@ define "ode" do
     resources hibernate_doclet(:package=>"org.apache.ode.daohib.bpel.hobj", :excludedtags=>"@version,@author,@todo")
 
     # doclet does not support not-found="ignore"
-    build {
+    task "hbm-hack" do |task|
       process_instance_hbm_file = project.path_to("target/classes/org/apache/ode/daohib/bpel/hobj/HProcessInstance.hbm.xml") 
       process_instance_hbm = File.read(process_instance_hbm_file)
       if !process_instance_hbm.include? "not-found=\"ignore\""
         process_instance_hbm.insert(process_instance_hbm.index("class=\"org.apache.ode.daohib.bpel.hobj.HProcess\"") - 1, "not-found=\"ignore\" ")
         File.open(process_instance_hbm_file, "w") { |f| f << process_instance_hbm }
       end
-    }
+    end
+    task "compile" => "hbm-hack"
 
     test.with project("bpel-epr"), BACKPORT, COMMONS.collections, COMMONS.lang, HSQLDB,
       GERONIMO.transaction, GERONIMO.kernel, GERONIMO.connector, JAVAX.connector, JAVAX.ejb, SPRING

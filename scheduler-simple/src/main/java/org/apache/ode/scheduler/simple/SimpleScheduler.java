@@ -116,6 +116,11 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         Used to avoid cases where a job would be dispatched twice if the server is under high load and
         does not fully process a job before it is reloaded from the database. */
     private ConcurrentHashMap<String, Long> _outstandingJobs = new ConcurrentHashMap<String, Long>();
+    /** Set of Jobs processed since the last LoadImmediate task.
+        This prevents a race condition where a job is processed twice. This could happen if a LoadImediate tasks loads a job
+        from the db before the job is processed but puts it in the _outstandingJobs map after the job was processed .
+        In such a case the job is no longer in the _outstandingJobs map, and so it's queued again. */
+    private ConcurrentHashMap<String, Long> _processedSinceLastLoadTask = new ConcurrentHashMap<String, Long>();
 
     private boolean _running;
 
@@ -126,6 +131,12 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
 
     private long _pollIntervalForPolledRunnable = Long.getLong("org.apache.ode.polledRunnable.pollInterval", 10 * 60 * 1000);
 
+    /** Number of immediate retries when the transaction fails **/
+    private int _immediateTransactionRetryLimit = 3;
+
+    /** Interval between immediate retries when the transaction fails **/
+    private long _immediateTransactionRetryInterval = 1000;
+
     public SimpleScheduler(String nodeId, DatabaseDelegate del, Properties conf) {
         _nodeId = nodeId;
         _db = del;
@@ -135,6 +146,10 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         _staleInterval = getLongProperty(conf, "ode.scheduler.staleInterval", _staleInterval);
         _tps = getIntProperty(conf, "ode.scheduler.transactionsPerSecond", _tps);
         _warningDelay =  getLongProperty(conf, "ode.scheduler.warningDelay", _warningDelay);
+
+        _immediateTransactionRetryLimit = getIntProperty(conf, "ode.scheduler.immediateTransactionRetryLimit", _immediateTransactionRetryLimit);
+        _immediateTransactionRetryInterval = getLongProperty(conf, "ode.scheduler.immediateTransactionRetryInterval", _immediateTransactionRetryInterval);
+
         _todo = new SchedulerThread(this);
     }
 
@@ -216,30 +231,57 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
     }
 
     public <T> T execTransaction(Callable<T> transaction) throws Exception, ContextException {
+        boolean existingTransaction = false;
         try {
-            if (__log.isDebugEnabled()) __log.debug("Beginning a new transaction");
-            _txm.begin();
+            existingTransaction = _txm.getTransaction() != null;
         } catch (Exception ex) {
-            String errmsg = "Internal Error, could not begin transaction.";
+            String errmsg = "Internal Error, could not get current transaction.";
             throw new ContextException(errmsg, ex);
         }
 
-        boolean success = false;
-        try {
-            T retval = transaction.call();
-            success = true;
-            return retval;
-        } catch (Exception ex) {
-            throw ex;
-        } finally {
-            if (success) {
-                if (__log.isDebugEnabled()) __log.debug("Commiting on " + _txm + "...");
-                _txm.commit();
-            } else {
-                if (__log.isDebugEnabled()) __log.debug("Rollbacking on " + _txm + "...");
-                _txm.rollback();
-            }
+        // already in transaction, execute and return directly
+        if (existingTransaction) {
+            return transaction.call();
         }
+
+        // run in new transaction
+        Exception ex = null;
+        int immediateRetryCount = _immediateTransactionRetryLimit;
+        do {
+            try {
+                if (__log.isDebugEnabled()) __log.debug("Beginning a new transaction");
+                _txm.begin();
+            } catch (Exception e) {
+                String errmsg = "Internal Error, could not begin transaction.";
+                throw new ContextException(errmsg, e);
+            }
+
+            try {
+                ex = null;
+                return transaction.call();
+            } catch (Exception e) {
+                ex = e;
+            } finally {
+                if (ex == null) {
+                    if (__log.isDebugEnabled()) __log.debug("Commiting on " + _txm + "...");
+                    try {
+                        _txm.commit();
+                    } catch( Exception e2 ) {
+                        ex = e2;
+                    }
+                } else {
+                    if (__log.isDebugEnabled()) __log.debug("Rollbacking on " + _txm + "...");
+                    _txm.rollback();
+                }
+                
+                if( ex != null && immediateRetryCount > 0 ) {
+                    if (__log.isDebugEnabled())  __log.debug("Will retry the transaction in " + _immediateTransactionRetryInterval + " msecs on " + _txm + " for error: ", ex);
+                    Thread.sleep(_immediateTransactionRetryInterval);
+                }
+            }
+        } while( immediateRetryCount-- > 0 );
+        
+        throw ex;
     }
 
     public void setRollbackOnly() throws Exception {
@@ -348,6 +390,7 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         _todo.clearTasks(UpgradeJobsTask.class);
         _todo.clearTasks(LoadImmediateTask.class);
         _todo.clearTasks(CheckStaleNodes.class);
+        _processedSinceLastLoadTask.clear();
         _outstandingJobs.clear();
 
         _knownNodes.clear();
@@ -396,6 +439,7 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         _todo.clearTasks(UpgradeJobsTask.class);
         _todo.clearTasks(LoadImmediateTask.class);
         _todo.clearTasks(CheckStaleNodes.class);
+        _processedSinceLastLoadTask.clear();
         _outstandingJobs.clear();
 
         // disable because this is not the right way to do it
@@ -405,80 +449,85 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         _running = false;
     }
 
+    class RunJob implements Callable<Void> {
+        final Job job;
+        final JobProcessor processor;
+
+        RunJob(Job job, JobProcessor processor) {
+            this.job = job;
+            this.processor = processor;
+        }
+
+        public Void call() throws Exception {
+            try {
+                final Scheduler.JobInfo jobInfo = new Scheduler.JobInfo(job.jobId, job.detail,
+                        (Integer) (job.detail.get("retry") != null ? job.detail.get("retry") : 0));
+                if (job.transacted) {
+                    final boolean[] needRetry = new boolean[]{false};
+                    try {
+                        execTransaction(new Callable<Void>() {
+                            public Void call() throws Exception {
+                                if (job.persisted)
+                                    if (!_db.deleteJob(job.jobId, _nodeId))
+                                        throw new JobNoLongerInDbException(job.jobId, _nodeId);
+                                try {
+                                    processor.onScheduledJob(jobInfo);
+                                    // If the job is a "runnable" job, schedule the next job occurence
+                                    if (job.detail.get("runnable") != null && !"COMPLETED".equals(String.valueOf(jobInfo.jobDetail.get("runnable_status")))) {
+                                        // the runnable is still in progress, schedule checker to 10 mins later
+                                        if (_pollIntervalForPolledRunnable < 0) {
+                                            if (__log.isWarnEnabled())
+                                                __log.warn("The poll interval for polled runnables is negative; setting it to 1000ms");
+                                            _pollIntervalForPolledRunnable = 1000;
+                                        }
+                                        job.schedDate = System.currentTimeMillis() + _pollIntervalForPolledRunnable;
+                                        _db.insertJob(job, _nodeId, false);
+                                    }
+                                } catch (JobProcessorException jpe) {
+                                    if (jpe.retry) {
+                                        needRetry[0] = true;
+                                    } else {
+                                        __log.error("Error while processing transaction, no retry.", jpe);
+                                    }
+                                    // Let execTransaction know that shit happened.
+                                    throw jpe;
+                                }
+                                return null;
+                            }
+                        });
+                    } catch (JobNoLongerInDbException jde) {
+                        // This may happen if two node try to do the same job... we try to avoid
+                        // it the synchronization is a best-effort but not perfect.
+                        __log.debug("job no longer in db forced rollback.");
+                    } catch (final Exception ex) {
+                        __log.error("Error while executing transaction", ex);
+
+                        // We only get here if the above execTransaction fails, so that transaction got
+                        // rollbacked already
+                        execTransaction(new Retry(job, needRetry[0]));
+                    }
+                } else {
+                    processor.onScheduledJob(jobInfo);
+                }
+                return null;
+            } finally {
+                // the order of these 2 actions is crucial to avoid a race condition.
+                _processedSinceLastLoadTask.put(job.jobId, job.schedDate);
+                _outstandingJobs.remove(job.jobId);
+            }
+        }
+    }
+    
     /**
      * Run a job in the current thread.
      *
      * @param job job to run.
      */
     protected void runJob(final Job job) {
-        final Scheduler.JobInfo jobInfo = new Scheduler.JobInfo(job.jobId, job.detail,
-                (Integer)(job.detail.get("retry") != null ? job.detail.get("retry") : 0));
-
-        _exec.submit(new Callable<Void>() {
-            public Void call() throws Exception {
-                try {
-                    if (job.transacted) {
-                        final Object[] needRetry = new Object[] { false };
-                        try {
-                            execTransaction(new Callable<Void>() {
-                                public Void call() throws Exception {
-                                    if (job.persisted)
-                                        if (!_db.deleteJob(job.jobId, _nodeId))
-                                            throw new JobNoLongerInDbException(job.jobId,_nodeId);
-                                    try {
-                                        _jobProcessor.onScheduledJob(jobInfo);
-                                    } catch (JobProcessorException jpe) {
-                                        if (jpe.retry) {
-                                            needRetry[0] = true;
-                                        } else {
-                                            __log.error("Error while processing transaction, no retry.", jpe);
-                                        }
-                                        // Let execTransaction know that shit happened.
-                                        throw jpe;
-                                    }
-                                    return null;
-                                }
-                            });
-                        } catch (JobNoLongerInDbException jde) {
-                            // This may happen if two node try to do the same job... we try to avoid
-                            // it the synchronization is a best-effort but not perfect.
-                            __log.debug("job no longer in db forced rollback.");
-                        } catch (final Exception ex) {
-                            // We only get here if the above execTransaction fails, so that transaction got
-                            // rollbacked already
-                            execTransaction(new Callable<Void>() {
-                                public Void call() throws Exception {
-                                    if ((Boolean)needRetry[0]) {
-                                        int retry = job.detail.get("retry") != null ? (((Integer)job.detail.get("retry")) + 1) : 0;
-                                        if (retry <= 10) {
-                                            long delay = doRetry(job);
-                                            __log.error("Error while processing transaction, retrying in " + delay + "s");
-                                        } else {
-                                            __log.error("Error while processing transaction after 10 retries, no more retries:"+job);
-                                        }
-                                    }
-
-                                    // We got rollbacked, as we schedule a retry we want to be sure the original kob is
-                                    // really deleted
-                                    if (job.persisted) _db.deleteJob(job.jobId, _nodeId);
-
-                                    __log.error("Error while executing transaction", ex);
-                                    return null;
-                                }
-                            });
-                        }
-                    } else {
-                        _jobProcessor.onScheduledJob(jobInfo);
-                    }
-                    return null;
-                } finally {
-                    _outstandingJobs.remove(job.jobId);
-                }
-            }
-        });
+        _exec.submit(new RunJob(job, _jobProcessor));
     }
 
-    /**
+     /**
      * Run a job from a polled runnable thread. The runnable is not persistent,
      * however, the poller is persistent and wakes up every given interval to
      * check the status of the runnable.
@@ -493,7 +542,7 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
      * <li>5. System powered off and restarts; the poller job does not know what the status
      * of the runnable. This is handled just like the case #1.</li>
      * </ul>
-     *
+     * <p/>
      * There is at least one re-scheduling of the poller job. Since, the runnable's state is
      * not persisted, and the same runnable may be tried again after system failure,
      * the runnable that's used with this polling should be repeatable.
@@ -501,58 +550,45 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
      * @param job job to run.
      */
     protected void runPolledRunnable(final Job job) {
-        final Scheduler.JobInfo jobInfo = new Scheduler.JobInfo(job.jobId, job.detail,
-                (Integer)(job.detail.get("retry") != null ? job.detail.get("retry") : 0));
+         _exec.submit(new RunJob(job, _polledRunnableProcessor));
+    }
 
-        _exec.submit(new Callable<Void>() {
-            public Void call() throws Exception {
-                try {
-                    execTransaction(new Callable<Void>() {
-                        public Void call() throws Exception {
-                            if (!_db.deleteJob(job.jobId, _nodeId))
-                                throw new JobNoLongerInDbException(job.jobId,_nodeId);
+    class Retry implements Callable<Void> {
+        final Job job;
+        final boolean needRetry;
 
-                            try {
-                                _polledRunnableProcessor.onScheduledJob(jobInfo);
-                                if( !"COMPLETED".equals(String.valueOf(jobInfo.jobDetail.get("runnable_status"))) ) {
-                                    // the runnable is still in progress, schedule checker to 10 mins later
-                                    if( _pollIntervalForPolledRunnable < 0 ) {
-                                        if(__log.isWarnEnabled()) __log.warn("The poll interval for polled runnables is negative; setting it to 1000ms");
-                                        _pollIntervalForPolledRunnable = 1000;
-                                    }
-                                    job.schedDate = System.currentTimeMillis() + _pollIntervalForPolledRunnable;
-                                    _db.insertJob(job, _nodeId, false);
-                                }
-                            } catch (JobProcessorException jpe) {
-                                if (jpe.retry) {
-                                    int retry = job.detail.get("retry") != null ? (((Integer)job.detail.get("retry")) + 1) : 0;
-                                    if (retry <= 10) {
-                                        long delay = doRetry(job);
-                                        __log.error("Error while processing transaction, retrying in " + delay + "s");
-                                    } else {
-                                        __log.error("Error while processing transaction after 10 retries, no more retries:"+job);
-                                    }
-                                } else {
-                                    __log.error("Error while processing transaction, no retry.", jpe);
-                                }
-                                // Let execTransaction know that shit happened.
-                                throw jpe;
-                            }
-                            return null;
-                        }
-                    });
-                } catch (JobNoLongerInDbException jde) {
-                    // This may happen if two node try to do the same job... we try to avoid
-                    // it the synchronization is a best-effort but not perfect.
-                    __log.debug("job no longer in db forced rollback.");
-                } catch (Exception ex) {
-                    __log.error("Error while executing transaction", ex);
-                } finally {
-                    _outstandingJobs.remove(job.jobId);
+        Retry(Job job, boolean needRetry) {
+            this.job = job;
+            this.needRetry = needRetry;
+        }
+
+        public Void call() throws Exception {
+            if (needRetry) {
+                int retry = job.detail.get("retry") != null ? (((Integer) job.detail.get("retry")) + 1) : 0;
+                if (retry <= 10) {
+                    long delay = doRetry(job);
+                    __log.error("Error while processing transaction, retrying in " + delay + "s");
+                } else {
+                    __log.error("Error while processing transaction after 10 retries, no more retries:" + job);
                 }
-                return null;
             }
-        });
+
+            // We got rollbacked, as we schedule a retry we want to be sure the original job is
+            // really deleted
+            if (job.persisted) _db.deleteJob(job.jobId, _nodeId);
+
+            return null;
+        }
+
+        private long doRetry(Job job) throws DatabaseException {
+          int retry = job.detail.get("retry") != null ? (((Integer)job.detail.get("retry")) + 1) : 0;
+          job.detail.put("retry", retry);
+          long delay = (long)(Math.pow(5, retry));
+          Job jobRetry = new Job(System.currentTimeMillis() + delay*1000, true, job.detail);
+          _db.insertJob(jobRetry, _nodeId, false);
+          return delay;
+        }
+
     }
 
     private void addTodoOnCommit(final Job job) {
@@ -577,7 +613,7 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
         }
     }
 
-    public void runTask(Task task) {
+    public void runTask(final Task task) {
         if (task instanceof Job) {
             Job job = (Job)task;
             if( job.detail.get("runnable") != null ) {
@@ -585,8 +621,18 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
             } else {
                 runJob(job);
             }
-        } else if (task instanceof SchedulerTask)
-            ((SchedulerTask) task).run();
+        } else if (task instanceof SchedulerTask) {
+            _exec.submit(new Callable<Void>() {
+                public Void call() throws Exception {
+                    try {
+                        ((SchedulerTask) task).run();
+                    } catch (Exception ex) {
+                        __log.error("Error during SchedulerTask execution", ex);
+                    }
+                    return null;
+                }
+            });
+        }
     }
 
     public void updateHeartBeat(String nodeId) {
@@ -623,6 +669,8 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
                     return _db.dequeueImmediate(_nodeId, System.currentTimeMillis() + _immediateInterval, batch);
                 }
             });
+            if (__log.isDebugEnabled()) __log.debug("loaded "+jobs.size()+" jobs from db");
+
             long delayedTime = System.currentTimeMillis() - _warningDelay;
             int delayedCount = 0;
             boolean runningLate;
@@ -638,12 +686,15 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
                     delayedCount++;
                 }
                 if (__log.isDebugEnabled())
-                    __log.debug("todo.enqueue job from db: " + j.jobId + " for " + j.schedDate + "(" + f.format(j.schedDate)+") "+(runningLate?" delayed=true":""));
+                    __log.debug("todo.enqueue job from db: " + j.jobId.trim() + " for " + j.schedDate + "(" + f.format(j.schedDate)+") "+(runningLate?" delayed=true":""));
                 enqueue(j);
             }
             if (delayedCount > 0) {
                 __log.warn("Dispatching jobs with more than "+(_warningDelay/60000)+" minutes delay. Either the server was down for some time or the job load is greater than available capacity");
             }
+
+            // clear only if the batch succeeded
+            _processedSinceLastLoadTask.clear();
             return true;
         } catch (Exception ex) {
             __log.error("Error loading immediate jobs from database.", ex);
@@ -654,13 +705,16 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
     }
 
     void enqueue(Job job) {
-        Long outstanding = _outstandingJobs.putIfAbsent(job.jobId, job.schedDate);
-        if (outstanding == null) {
+        boolean not_outstanding = _outstandingJobs.putIfAbsent(job.jobId, job.schedDate) == null;
+        boolean not_processed = _processedSinceLastLoadTask.get(job.jobId) == null;
+        if (not_outstanding && not_processed) {
             if (job.schedDate <= System.currentTimeMillis()) {
                 runJob(job);
             } else {
                 _todo.enqueue(job);
             }
+        }else if(__log.isDebugEnabled()){
+            __log.debug("Job "+job.jobId+" is already queued or processed");
         }
     }
 
@@ -729,15 +783,6 @@ public class SimpleScheduler implements Scheduler, TaskRunner {
             __log.debug("node recovery complete");
         }
 
-    }
-
-    private long doRetry(Job job) throws DatabaseException {
-        int retry = job.detail.get("retry") != null ? (((Integer)job.detail.get("retry")) + 1) : 0;
-        job.detail.put("retry", retry);
-        long delay = (long)(Math.pow(5, retry));
-        Job jobRetry = new Job(System.currentTimeMillis() + delay*1000, true, job.detail);
-        _db.insertJob(jobRetry, _nodeId, false);
-        return delay;
     }
 
     private abstract class SchedulerTask extends Task implements Runnable {
