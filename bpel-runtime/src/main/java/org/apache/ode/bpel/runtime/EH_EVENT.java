@@ -146,7 +146,7 @@ class EH_EVENT extends BpelJacobRunnable {
             }
         }
     }
-    
+
     /**
      * Template that represents the waiting for a pick response.
      */
@@ -328,15 +328,6 @@ class EH_EVENT extends BpelJacobRunnable {
                         }
 
                         public void onCancel() {
-                            instance(new WAITING(null));
-                        }
-                        
-                        private void fault(FaultException e) {
-                            __log.error(e);
-                            if (_fault == null) {
-                                _fault = createFault(e.getQName(), _oevent);
-                                terminateActive();
-                            }
                             instance(new WAITING(null));
                         }
                     });

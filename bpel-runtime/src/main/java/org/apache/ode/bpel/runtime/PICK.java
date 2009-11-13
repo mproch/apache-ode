@@ -129,7 +129,7 @@ class PICK extends ACTIVITY {
 
         instance(new WAITING(pickResponseChannel));
     }
-    
+
     /**
      * Resolves the correlation key from the given PartnerLinkInstance and a match type correlation(non-initiate or
      * already initialized join correlation).
@@ -302,6 +302,7 @@ class PICK extends ACTIVITY {
                     }
 
                     FaultData fault;
+                    initVariable(mexId, onMessage);
                     try {
                         VariableInstance vinst = _scopeFrame.resolve(onMessage.variable);
                         for (OScope.CorrelationSet cset : onMessage.initCorrelations) {
