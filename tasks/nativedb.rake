@@ -16,6 +16,7 @@
 #
 
 SETTINGS = "#{File.expand_path('.buildr', ENV['HOME'])}/settings.rb"
+REQUIRES=""
 
 module NativeDB
 #
