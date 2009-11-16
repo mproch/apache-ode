@@ -280,10 +280,11 @@ class EH_EVENT extends BpelJacobRunnable {
                                         getBpelRuntimeContext().initializePartnersSessionId(ehScopeFrame.resolve(_oevent.partnerLink),
                                                 partnersSessionId);
                                 }
-
+                                
+                                getBpelRuntimeContext().cancelOutstandingRequests(_pickResponseChannel.export());
                                 // this request is now waiting for a reply
                                 getBpelRuntimeContext().processOutstandingRequest(_scopeFrame.resolve(_oevent.partnerLink), 
-                                        _oevent.operation.getName(), _oevent.messageExchangeId);
+                                        _oevent.operation.getName(), _oevent.messageExchangeId, mexId);
 
                             } catch (FaultException e) {
                                 __log.error(e);

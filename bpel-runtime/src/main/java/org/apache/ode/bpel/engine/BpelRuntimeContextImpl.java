@@ -486,10 +486,10 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         _outstandingRequests.cancel(channelId);
     }
     
-    public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) throws FaultException {
-        String mexRef = _outstandingRequests.processOutstandingRequest(partnerLink, opName, mexId);
+    public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String bpelMexId, String odeMexId) throws FaultException {
+        String mexRef = _outstandingRequests.processOutstandingRequest(partnerLink, opName, bpelMexId, odeMexId);
         if (mexRef != null) {
-            reply(mexRef, partnerLink, opName, mexId, null, _bpelProcess.getOProcess().constants.qnConflictingRequest, true);
+            reply(mexRef, partnerLink, opName, bpelMexId, null, _bpelProcess.getOProcess().constants.qnConflictingRequest, true);
             throw new FaultException(_bpelProcess.getOProcess().constants.qnConflictingRequest);
         }
     }

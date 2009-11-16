@@ -49,7 +49,7 @@ public class OutstandingRequestManager implements Serializable {
 
     public final Map<RequestIdTuple, Entry> _byRid = new HashMap<RequestIdTuple, Entry>();
     // holds outstanding rid that are now waiting to reply
-    public final Map<OutstandingRequestIdTuple, Entry> _byOrid = new HashMap<OutstandingRequestIdTuple, Entry>();
+    public final Map<OutstandingRequestIdTuple, String> _byOrid = new HashMap<OutstandingRequestIdTuple, String>();
     public final Map<String, Entry> _byChannel = new HashMap<String, Entry>();
 
     //finds conflictingReceive
@@ -103,26 +103,26 @@ public class OutstandingRequestManager implements Serializable {
     }
 
     //convert registered request into outstanding
-    String processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) {
+    String processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId, String mexRef) {
         if (__log.isTraceEnabled()) {
-            __log.trace(ObjectPrinter.stringifyMethodEnter("process", new Object[] { "partnerLinkInstance", partnerLink, "operationName", opName, "messageExchangeId", mexId }));
+            __log.trace(ObjectPrinter.stringifyMethodEnter("process", new Object[] { "partnerLinkInstance", partnerLink, "operationName", opName, "messageExchangeId", mexId, "mexRef", mexRef }));
         }
-        final RequestIdTuple rid = new RequestIdTuple(partnerLink, opName);
         final OutstandingRequestIdTuple orid = new OutstandingRequestIdTuple(partnerLink, opName, mexId);
-        Entry entry = _byRid.get(rid);
-        if (entry == null) {
-            String errmsg = "INTERNAL ERROR: Missing ENTRY for RID " + rid;
-            __log.fatal(errmsg);
-            throw new IllegalStateException(errmsg);
-        }
-        _byRid.remove(rid);
+//      final RequestIdTuple rid = new RequestIdTuple(partnerLink, opName);
+//        Entry entry = _byRid.get(rid);
+//        if (entry == null) {
+//            String errmsg = "INTERNAL ERROR: Missing ENTRY for RID " + rid;
+//            __log.fatal(errmsg);
+//            throw new IllegalStateException(errmsg);
+//        }
+//        _byRid.remove(rid);
         if (_byOrid.containsKey(orid)) {
             //conflictingRequest found
-            return entry.mexRef;
+            return mexRef;
         }
         // We convert into outstanding request only for in-out operations (pending release operation)
         if (partnerLink.partnerLink.getMyRoleOperation(opName).getStyle().equals(OperationType.REQUEST_RESPONSE)) {
-            _byOrid.put(orid, entry);
+            _byOrid.put(orid, mexRef);
         }
         return null;
     }
@@ -140,7 +140,6 @@ public class OutstandingRequestManager implements Serializable {
         Entry entry = _byChannel.remove(pickResponseChannel);
         if (entry != null) {
             while (_byRid.values().remove(entry));
-            while (_byOrid.values().remove(entry));
         }
     }
 
@@ -188,19 +187,14 @@ public class OutstandingRequestManager implements Serializable {
             __log.trace(ObjectPrinter.stringifyMethodEnter("release", new Object[] { "plinkInstance", plinkInstnace, "opName", opName, "mexId", mexId }));
 
         final OutstandingRequestIdTuple orid = new OutstandingRequestIdTuple(plinkInstnace, opName, mexId);
-        Entry entry = _byOrid.get(orid);
-        if (entry == null) {
-            entry = _byRid.get(orid);
-        }
-        if (entry == null) {
+        String mexRef = _byOrid.remove(orid);
+        if (mexRef == null) {
             if (__log.isDebugEnabled()) {
                 __log.debug("==release: ORID " + orid + " not found in " + _byOrid);
             }
             return null;
         }
-        while (_byChannel.values().remove(entry));
-        while (_byOrid.values().remove(entry));
-        return entry.mexRef;
+        return mexRef;
     }
 
     /**
@@ -214,10 +208,9 @@ public class OutstandingRequestManager implements Serializable {
 
         ArrayList<String> mexRefs = new ArrayList<String>();
         while (!_byOrid.isEmpty()) {
-            Entry entry = _byOrid.entrySet().iterator().next().getValue();
-            mexRefs.add(entry.mexRef);
-            _byChannel.values().remove(entry);
-            _byOrid.values().remove(entry);
+            String mexRef = _byOrid.entrySet().iterator().next().getValue();
+            mexRefs.add(mexRef);
+            _byOrid.values().remove(mexRef);
         }
         return mexRefs.toArray(new String[mexRefs.size()]);
     }
