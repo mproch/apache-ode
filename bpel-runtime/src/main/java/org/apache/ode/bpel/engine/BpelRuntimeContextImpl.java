@@ -485,6 +485,10 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
     public void cancelOutstandingRequests(String channelId) {
         _outstandingRequests.cancel(channelId);
     }
+    
+    public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) {
+        _outstandingRequests.process(partnerLink, opName, mexId);
+    }
 
     public void reply(final PartnerLinkInstance plinkInstnace, final String opName, final String mexId, Element msg,
                       QName fault) throws FaultException {

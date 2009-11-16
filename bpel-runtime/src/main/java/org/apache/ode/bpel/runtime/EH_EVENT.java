@@ -290,7 +290,9 @@ class EH_EVENT extends BpelJacobRunnable {
                                 return;
                             }
 
-
+                            // this request is now waiting for a reply
+                            getBpelRuntimeContext().processOutstandingRequest(_scopeFrame.resolve(_oevent.partnerLink), 
+                                    _oevent.operation.getName(), _oevent.messageExchangeId);
 
                             // load 'onMessage' activity; we'll do this even if a stop/terminate has been
                             // requested becasue we cannot undo the receipt of the message at this point.

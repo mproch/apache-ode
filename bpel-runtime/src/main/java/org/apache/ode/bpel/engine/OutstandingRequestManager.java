@@ -49,6 +49,8 @@ public class OutstandingRequestManager implements Serializable {
   private static final Log __log = LogFactory.getLog(OutstandingRequestManager.class);
 
   public final Map<RequestIdTuple, Entry> _byRid = new HashMap<RequestIdTuple, Entry>();
+  // holds outstanding rid that are now waiting to reply
+  public final Map<RequestIdTuple, Entry> _replyRid = new HashMap<RequestIdTuple, Entry>();
   public final Map<String, Entry> _byChannel = new HashMap<String, Entry>();
 
   int findConflict(Selector selectors[]) {
@@ -58,9 +60,6 @@ public class OutstandingRequestManager implements Serializable {
 
     Set<RequestIdTuple> workingSet = new HashSet<RequestIdTuple>(_byRid.keySet());
     for (int i = 0; i < selectors.length; ++i) {
-      if (selectors[i].oneWay) {
-        continue;
-      }
       final RequestIdTuple rid = new RequestIdTuple(selectors[i].plinkInstance,selectors[i].opName, selectors[i].messageExchangeId);
       if (workingSet.contains(rid)) {
         return i;
@@ -92,10 +91,6 @@ public class OutstandingRequestManager implements Serializable {
 
     Entry entry = new Entry(pickResponseChannel, selectors);
     for (int i = 0 ; i < selectors.length; ++i) {
-      if (selectors[i].oneWay) {
-        continue;
-      }
-      
       final RequestIdTuple rid = new RequestIdTuple(selectors[i].plinkInstance,selectors[i].opName, selectors[i].messageExchangeId);
       if (_byRid.containsKey(rid)) {
         String errmsg = "INTERNAL ERROR: Duplicate ENTRY for RID " + rid;
@@ -106,6 +101,30 @@ public class OutstandingRequestManager implements Serializable {
     }
 
     _byChannel.put(pickResponseChannel, entry);
+  }
+  
+  void process(PartnerLinkInstance partnerLink, String opName, String mexId) {
+      if (__log.isTraceEnabled()) {
+          __log.trace(ObjectPrinter.stringifyMethodEnter("process", new Object[] {
+            "partnerLinkInstance", partnerLink,
+            "operationName", opName,
+            "messageExchangeId", mexId
+          }) );
+        }
+      final RequestIdTuple rid = new RequestIdTuple(partnerLink, opName, mexId);
+      Entry entry = _byRid.get(rid);
+      if (entry == null) {
+          String errmsg = "INTERNAL ERROR: Missing ENTRY for RID " + rid;
+          __log.fatal(errmsg);
+          throw new IllegalStateException(errmsg);
+      }
+      if (_replyRid.containsKey(rid)) {
+          String errmsg = "INTERNAL ERROR: Duplicate processing ENTRY for RID " + rid;
+            __log.fatal(errmsg);
+            throw new IllegalStateException(errmsg);
+      }
+      _byRid.remove(rid);
+      _replyRid.put(rid, entry);
   }
 
   /**
@@ -173,7 +192,10 @@ public class OutstandingRequestManager implements Serializable {
       }) );
 
     final RequestIdTuple rid = new RequestIdTuple(plinkInstnace,opName, mexId);
-    Entry entry = _byRid.get(rid);
+    Entry entry = _replyRid.get(rid);
+    if (entry == null) {
+        entry = _byRid.get(rid);
+    }
     if (entry == null) {
       if (__log.isDebugEnabled()) {
         __log.debug("==release: RID " + rid + " not found in " + _byRid);
@@ -182,6 +204,7 @@ public class OutstandingRequestManager implements Serializable {
     }
     while(_byChannel.values().remove(entry));
     while(_byRid.values().remove(entry));
+    while(_replyRid.values().remove(entry));
     return entry.mexRef;
   }
 

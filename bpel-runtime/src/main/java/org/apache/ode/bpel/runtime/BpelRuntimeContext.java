@@ -296,5 +296,7 @@ public interface BpelRuntimeContext {
 
     QName getProcessQName();
 
+    void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId);
+
     Date getCurrentEventDateTime();
 }
