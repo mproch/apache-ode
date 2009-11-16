@@ -296,7 +296,7 @@ public interface BpelRuntimeContext {
 
     QName getProcessQName();
 
-    void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId);
+    void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) throws FaultException;
 
     Date getCurrentEventDateTime();
 }

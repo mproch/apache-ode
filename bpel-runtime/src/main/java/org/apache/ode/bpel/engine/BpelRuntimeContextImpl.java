@@ -486,14 +486,15 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         _outstandingRequests.cancel(channelId);
     }
     
-    public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) {
-        _outstandingRequests.process(partnerLink, opName, mexId);
+    public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId) throws FaultException {
+        String mexRef = _outstandingRequests.processOutstandingRequest(partnerLink, opName, mexId);
+        if (mexRef != null) {
+            reply(mexRef, partnerLink, opName, mexId, null, _bpelProcess.getOProcess().constants.qnConflictingRequest, true);
+            throw new FaultException(_bpelProcess.getOProcess().constants.qnConflictingRequest);
+        }
     }
 
-    public void reply(final PartnerLinkInstance plinkInstnace, final String opName, final String mexId, Element msg,
-                      QName fault) throws FaultException {
-        String mexRef = _outstandingRequests.release(plinkInstnace, opName, mexId);
-
+    public void reply(String mexRef, final PartnerLinkInstance plinkInstnace, final String opName, final String mexId, Element msg, QName fault, boolean failure) throws FaultException {
         if (mexRef == null) {
             throw new FaultException(_bpelProcess.getOProcess().constants.qnMissingRequest);
         }
@@ -514,7 +515,9 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         _bpelProcess.initMyRoleMex(m);
         m.setResponse(new MessageImpl(message));
 
-        if (fault != null) {
+        if (failure) {
+            mex.setStatus(MessageExchange.Status.FAILURE.toString());
+        } else if (fault != null) {
             mex.setStatus(MessageExchange.Status.FAULT.toString());
             mex.setFault(fault);
             evt.setAspect(ProcessMessageExchangeEvent.PROCESS_FAULT);
@@ -559,6 +562,12 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
 
         // send event
         sendEvent(evt);
+    }
+
+    public void reply(final PartnerLinkInstance plinkInstnace, final String opName, final String mexId, Element msg,
+                      QName fault) throws FaultException {
+        String mexRef = _outstandingRequests.release(plinkInstnace, opName, mexId);
+        reply(mexRef, plinkInstnace, opName, mexId, msg, fault, false);
     }
 
     /**
