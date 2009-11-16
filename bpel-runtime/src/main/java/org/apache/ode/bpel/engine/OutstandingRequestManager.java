@@ -47,6 +47,7 @@ public class OutstandingRequestManager implements Serializable {
 
     private static final Log __log = LogFactory.getLog(OutstandingRequestManager.class);
 
+    // holds rid for registered IMAs
     public final Map<RequestIdTuple, Entry> _byRid = new HashMap<RequestIdTuple, Entry>();
     // holds outstanding rid that are now waiting to reply
     public final Map<OutstandingRequestIdTuple, String> _byOrid = new HashMap<OutstandingRequestIdTuple, String>();
@@ -108,14 +109,6 @@ public class OutstandingRequestManager implements Serializable {
             __log.trace(ObjectPrinter.stringifyMethodEnter("process", new Object[] { "partnerLinkInstance", partnerLink, "operationName", opName, "messageExchangeId", mexId, "mexRef", mexRef }));
         }
         final OutstandingRequestIdTuple orid = new OutstandingRequestIdTuple(partnerLink, opName, mexId);
-//      final RequestIdTuple rid = new RequestIdTuple(partnerLink, opName);
-//        Entry entry = _byRid.get(rid);
-//        if (entry == null) {
-//            String errmsg = "INTERNAL ERROR: Missing ENTRY for RID " + rid;
-//            __log.fatal(errmsg);
-//            throw new IllegalStateException(errmsg);
-//        }
-//        _byRid.remove(rid);
         if (_byOrid.containsKey(orid)) {
             //conflictingRequest found
             return mexRef;
