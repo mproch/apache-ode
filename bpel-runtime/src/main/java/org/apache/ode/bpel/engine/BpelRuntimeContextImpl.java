@@ -486,7 +486,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
     }
 
     public void cancelOutstandingRequests(String channelId) {
-        _imaManager.cancel(channelId);
+        _imaManager.cancel(channelId, false);
     }
     
     public void processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String bpelMexId, String odeMexId) throws FaultException {
@@ -953,8 +953,6 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
             sendEvent(evt);
         }
 
-        _imaManager.associate(responsechannel, mex.getMessageExchangeId());
-
         final String mexId = mex.getMessageExchangeId();
         _vpu.inject(new JacobRunnable() {
             private static final long serialVersionUID = 3168964409165899533L;
@@ -970,7 +968,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         // In case this is a pick event, we remove routes,
         // and cancel the outstanding requests.
         _dao.getProcess().removeRoutes(timerResponseChannel, _dao);
-        _imaManager.cancel(timerResponseChannel);
+        _imaManager.cancel(timerResponseChannel, true);
 
         // Ignore timer events after the process is finished.
         if (ProcessState.isFinished(_dao.getState())) {
@@ -993,7 +991,7 @@ public class BpelRuntimeContextImpl implements BpelRuntimeContext {
         // receive/reply association.
         final String id = timerResponseChannel.export();
         _dao.getProcess().removeRoutes(id, _dao);
-        _imaManager.cancel(id);
+        _imaManager.cancel(id, true);
 
         _vpu.inject(new JacobRunnable() {
             private static final long serialVersionUID = 6157913683737696396L;

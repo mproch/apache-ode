@@ -126,42 +126,18 @@ public class IMAManager implements Serializable {
      * @see #register(String, Selector[])
      * @param pickResponseChannel
      */
-    void cancel(String pickResponseChannel) {
+    void cancel(String pickResponseChannel, boolean isTimer) {
         if (__log.isTraceEnabled())
             __log.trace(ObjectPrinter.stringifyMethodEnter("cancel", new Object[] { "pickResponseChannel", pickResponseChannel }));
 
         Entry entry = _byChannel.remove(pickResponseChannel);
         if (entry != null) {
             while (_byRid.values().remove(entry));
-        }
-    }
-
-    /**
-     * Associate a message exchange with a registered receive/pick. This happens when a message corresponding to the receive/pick is received by the system.
-     * 
-     * @param pickResponseChannel
-     * @param mexRef
-     */
-    void associate(String pickResponseChannel, String mexRef) {
-        if (__log.isTraceEnabled())
-            __log.trace(ObjectPrinter.stringifyMethodEnter("associate", new Object[] { "pickResponseChannel", pickResponseChannel, "mexRef", mexRef }));
-
-        Entry entry = _byChannel.get(pickResponseChannel);
-        if (entry == null) {
+        } else if (!isTimer){
             String errmsg = "INTERNAL ERROR: No ENTRY for RESPONSE CHANNEL " + pickResponseChannel;
             __log.fatal(errmsg);
             throw new IllegalArgumentException(errmsg);
         }
-
-        // For pub-sub cases, an entry may already be associated with a message
-        // Hence, the sanity check shown below is no longer valid
-        // if (entry.mexRef != null) {
-        // String errmsg = "INTERNAL ERROR: Duplicate ASSOCIATION for CHANEL " + pickResponseChannel;
-        // __log.fatal(errmsg);
-        // throw new IllegalStateException(errmsg);
-        // }
-
-        entry.mexRef = mexRef;
     }
 
     /**
@@ -188,6 +164,12 @@ public class IMAManager implements Serializable {
             return null;
         }
         return mexRef;
+    }
+    
+    public void migrateEntries(Set<Entry> entries) {
+        for (Entry e : entries) {
+            
+        }
     }
 
     /**
