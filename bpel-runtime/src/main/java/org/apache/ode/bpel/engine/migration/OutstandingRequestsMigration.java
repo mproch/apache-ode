@@ -58,9 +58,8 @@ public class OutstandingRequestsMigration implements Migration {
                 if (data instanceof OutstandingRequestManager) {
                     OutstandingRequestManager orm = (OutstandingRequestManager) data;
 
-                    Set<Entry> entries = orm.getIMAEntries();
                     IMAManager imaManager = new IMAManager();
-                    imaManager.migrateEntries(entries);
+                    imaManager.migrateRids(orm.getRids());
                     soup.setGlobalData(imaManager);
                 }
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();

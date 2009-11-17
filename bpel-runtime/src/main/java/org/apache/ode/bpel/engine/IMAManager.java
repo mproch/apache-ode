@@ -45,15 +45,20 @@ import org.apache.commons.logging.LogFactory;
 public class IMAManager implements Serializable {
     private static final long serialVersionUID = -5556374398943757951L;
 
-    private static final Log __log = LogFactory.getLog(OutstandingRequestManager.class);
+    private static final Log __log = LogFactory.getLog(IMAManager.class);
 
     // holds rid for registered IMAs
     public final Map<RequestIdTuple, Entry> _byRid = new HashMap<RequestIdTuple, Entry>();
-    // holds outstanding rid that are now waiting to reply
+    // holds outstanding rid that are now waiting to reply (Open IMAs)
     public final Map<OutstandingRequestIdTuple, String> _byOrid = new HashMap<OutstandingRequestIdTuple, String>();
     public final Map<String, Entry> _byChannel = new HashMap<String, Entry>();
 
-    //finds conflictingReceive
+    /**
+     * finds conflictingReceive
+     * 
+     * @param selectors
+     * @return
+     */
     int findConflict(Selector selectors[]) {
         if (__log.isTraceEnabled()) {
             __log.trace(ObjectPrinter.stringifyMethodEnter("findConflict", new Object[] { "selectors", selectors }));
@@ -71,7 +76,7 @@ public class IMAManager implements Serializable {
     }
 
     /**
-     * Register a receive/pick with the manager. This occurs when the receive/pick is encountered in the processing of the BPEL script.
+     * Register IMA
      * 
      * @param pickResponseChannel
      *            response channel associated with this receive/pick
@@ -103,7 +108,16 @@ public class IMAManager implements Serializable {
         _byChannel.put(pickResponseChannel, entry);
     }
 
-    //convert registered request into outstanding
+    /**
+     * Registers Open IMA.
+     * It doesn't open IMA for non two way operations.
+     * 
+     * @param partnerLink
+     * @param opName
+     * @param mexId
+     * @param mexRef
+     * @return
+     */
     String processOutstandingRequest(PartnerLinkInstance partnerLink, String opName, String mexId, String mexRef) {
         if (__log.isTraceEnabled()) {
             __log.trace(ObjectPrinter.stringifyMethodEnter("process", new Object[] { "partnerLinkInstance", partnerLink, "operationName", opName, "messageExchangeId", mexId, "mexRef", mexRef }));
@@ -121,7 +135,7 @@ public class IMAManager implements Serializable {
     }
 
     /**
-     * Cancel a previous registration.
+     * This is used to remove IMA from registered state.
      * 
      * @see #register(String, Selector[])
      * @param pickResponseChannel
@@ -141,7 +155,7 @@ public class IMAManager implements Serializable {
     }
 
     /**
-     * Release the registration. This method is called when the reply activity sends a reply corresponding to the registration.
+     * Release Open IMA.
      * 
      * @param plinkInstnace
      *            partner link
@@ -166,14 +180,24 @@ public class IMAManager implements Serializable {
         return mexRef;
     }
     
-    public void migrateEntries(Set<Entry> entries) {
-        for (Entry e : entries) {
-            
+    public void migrateRids(Map<OutstandingRequestManager.RequestIdTuple, OutstandingRequestManager.Entry> oldRids) {
+        for (OutstandingRequestManager.RequestIdTuple oldRid : oldRids.keySet()) {
+            OutstandingRequestManager.Entry oldEntry = oldRids.get(oldRid);
+            if (oldEntry.mexRef != null) {
+                //open IMA
+                OutstandingRequestIdTuple orid = new OutstandingRequestIdTuple(oldRid.partnerLink, oldRid.opName, oldRid.mexId);
+                _byOrid.put(orid, oldEntry.mexRef);
+            } else {
+                //registered IMA
+                RequestIdTuple rid = new RequestIdTuple(oldRid.partnerLink, oldRid.opName); 
+                Entry entry = new Entry(oldEntry.pickResponseChannel, (Selector[]) oldEntry.selectors);
+                _byRid.put(rid, entry);
+            }
         }
     }
 
     /**
-     * "Release" all outstanding incoming messages exchanges. Makes the object forget about the previous registrations
+     * "Release" all Open IMAs
      * 
      * @return a list of message exchange identifiers for message exchanges that were begun (receive/pick got a message) but not yet completed (reply not yet sent)
      */
@@ -254,8 +278,7 @@ public class IMAManager implements Serializable {
     public class Entry implements Serializable {
         private static final long serialVersionUID = -583743124656582887L;
         final String pickResponseChannel;
-        public Object[] selectors;
-        String mexRef;
+        public Selector[] selectors;
 
         private Entry(String pickResponseChannel, Selector[] selectors) {
             this.pickResponseChannel = pickResponseChannel;
@@ -263,7 +286,7 @@ public class IMAManager implements Serializable {
         }
 
         public String toString() {
-            return ObjectPrinter.toString(this, new Object[] { "pickResponseChannel", pickResponseChannel, "selectors", selectors, "mexRef", mexRef });
+            return ObjectPrinter.toString(this, new Object[] { "pickResponseChannel", pickResponseChannel, "selectors", selectors });
         }
     }
 }
