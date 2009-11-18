@@ -36,10 +36,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * <p>
- * Manages receive/pick--reply matching. Keeps track of active pick/receive activities (i.e. those that have been reached in the script) and their association with a message exchange (for those receive/picks that have received a message). The purpose of this class is to 1) enable matching a reply activity to the corresponding receive/pick activity and 2) allow us to fault out message exchanges that have not been replied to when they go out of scope.
- * </p>
- * <p>
- * Note, this class is only used for INBOUND synchronous (request-response) operations. None of this is necessary for asynchronous messages.
+ * This class handles behaviour of IMAs (Inbound Message Activities) as specified in WS BPEL. 
+ * This includes detecting conflictingReceive and conflictingRequest faults. 
  * </p>
  */
 public class IMAManager implements Serializable {
