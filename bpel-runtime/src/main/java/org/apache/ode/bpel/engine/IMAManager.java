@@ -192,6 +192,7 @@ public class IMAManager implements Serializable {
                 RequestIdTuple rid = new RequestIdTuple(oldRid.partnerLink, oldRid.opName); 
                 Entry entry = new Entry(oldEntry.pickResponseChannel, (Selector[]) oldEntry.selectors);
                 _byRid.put(rid, entry);
+                _byChannel.put(entry.pickResponseChannel, entry);
             }
         }
     }
