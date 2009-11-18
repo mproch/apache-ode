@@ -16,13 +16,12 @@
 #
 
 SETTINGS = "#{File.expand_path('.buildr', ENV['HOME'])}/settings.rb"
-REQUIRES=""
 
 module NativeDB
 #
   if File.exist? SETTINGS
     require SETTINGS
-    Java.rjb.onload { Java.rjb.classpath << REQUIRES  }
+    Java.classpath << REQUIRES
   end
 
   class << self
