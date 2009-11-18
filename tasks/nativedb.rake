@@ -21,7 +21,7 @@ module NativeDB
 #
   if File.exist? SETTINGS
     require SETTINGS
-    Java.classpath << REQUIRES
+    Java.rjb.onload { Java.rjb.classpath << REQUIRES  }
   end
 
   class << self
