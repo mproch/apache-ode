@@ -31,7 +31,7 @@
 #   end
 class BndTask < Rake::FileTask
 
-  BND = "biz.aQute:bnd:jar:0.0.357"
+  BND = "biz.aQute:bnd:jar:0.0.379"
 
   # Classpath string for building the bundle
   attr_accessor :classpath

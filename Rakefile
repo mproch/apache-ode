@@ -144,6 +144,7 @@ repositories.remote << "http://people.apache.org/repo/m2-incubating-repository"
 repositories.remote << "http://repo1.maven.org/maven2"
 repositories.remote << "http://people.apache.org/repo/m2-snapshot-repository"
 repositories.remote << "http://download.java.net/maven/2"
+repositories.remote << "http://www.aqute.biz/repo"
 repositories.release_to[:url] ||= "sftp://guest@localhost/home/guest"
 
 BUNDLE_VERSIONS = {
