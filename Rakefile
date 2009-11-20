@@ -79,6 +79,7 @@ JAVAX               = struct(
   :javamail         =>"geronimo-spec:geronimo-spec-javamail:jar:1.3.1-rc5",
   :jms              =>"geronimo-spec:geronimo-spec-jms:jar:1.1-rc4",
   :persistence      =>"javax.persistence:persistence-api:jar:1.0",
+  :persistenceGeronimo      =>"org.apache.geronimo.specs:geronimo-jpa_3.0_spec:jar:1.1.1",
   :servlet          =>"org.apache.geronimo.specs:geronimo-servlet_2.4_spec:jar:1.0",
   :stream           =>"stax:stax-api:jar:1.0.1",
   :transaction      =>"org.apache.geronimo.specs:geronimo-jta_1.1_spec:jar:1.1",
@@ -559,18 +560,18 @@ define "ode" do
       bnd.properties["inlines"] = inlines.join(', ')
 
       # embed jars
-      bnd_libs = ode_libs + artifacts(AXIOM, BACKPORT, COMMONS.codec, COMMONS.collections, COMMONS.dbcp,
-                                      COMMONS.lang, COMMONS.pool, COMMONS.primitives, GERONIMO.connector,
-                                      JAXEN, JAVAX.connector, JAVAX.persistence, JAVAX.ejb, OPENJPA, SAXON, TRANQL, 
-                                      XALAN, XERCES, XMLBEANS, WSDL4J)
-      includes = bnd_libs.map{|item| File.basename(item.to_s)} 
+      includes = ode_libs.map{|item| File.basename(item.to_s)} 
       bnd.properties["includes"] = includes.join(', ') 
     end
 
     # Generate features.xml
     def package_as_feature(file_name)
+      features = { "features" => artifacts(AXIOM, BACKPORT, COMMONS.codec, COMMONS.collections, COMMONS.dbcp,
+                                     COMMONS.lang, COMMONS.pool, COMMONS.primitives, GERONIMO.connector,
+                                      JAXEN, JAVAX.connector, JAVAX.persistenceGeronimo, JAVAX.ejb, OPENJPA, SAXON, TRANQL,
+                                      XALAN, XERCES, XMLBEANS, WSDL4J).map{|item| "<bundle>wrap:mvn:".concat(item.to_spec.gsub(/jar:/, "").gsub(/:/,"/")).concat("</bundle>\n")} }
       file file_name  => [_("src/main/filtered-resources/features.xml")] do
-        filter(_("src/main/filtered-resources")).include("features.xml").into(_("target")).using(BUNDLE_VERSIONS).run
+        filter(_("src/main/filtered-resources")).include("features.xml").into(_("target")).using(features.merge(BUNDLE_VERSIONS)).run
         mv _("target/features.xml"), file_name
       end
     end

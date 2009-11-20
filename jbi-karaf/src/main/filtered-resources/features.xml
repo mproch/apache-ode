@@ -25,5 +25,6 @@
         <bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${servicemix.specs.version}</bundle>
         <bundle>mvn:org.apache.derby/derby/${derby.version}</bundle>
         <bundle>mvn:org.apache.ode/ode-jbi-karaf/${ode.version}/jar/bundle</bundle>
+	${features}
     </feature>
 </features>

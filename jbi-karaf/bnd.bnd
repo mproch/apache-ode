@@ -23,7 +23,7 @@ Import-Package: \
         org.xml.sax.helpers, \
         *;resolution:=optional
 
-DynamicImport-Package:javax.*,org.xml.*,org.w3c.*
+DynamicImport-Package:javax.*,org.xml.*,org.w3c.*,*
 
 Include-Resource: ${includes}, \
                   ${inlines}, \

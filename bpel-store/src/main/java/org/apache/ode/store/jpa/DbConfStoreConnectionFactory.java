@@ -21,16 +21,18 @@ package org.apache.ode.store.jpa;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ode.dao.jpa.JpaTxMgrProvider;
-import org.apache.ode.store.ConfStoreConnection;
-import org.apache.ode.store.ConfStoreConnectionFactory;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Map.Entry;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.sql.DataSource;
 import javax.transaction.TransactionManager;
 
-import java.util.HashMap;
+import org.apache.ode.dao.jpa.JpaTxMgrProvider;
+import org.apache.ode.store.ConfStoreConnection;
+import org.apache.ode.store.ConfStoreConnectionFactory;
 
 /**
  * @author Matthieu Riou <mriou at apache dot org>
@@ -43,8 +45,12 @@ public class DbConfStoreConnectionFactory implements ConfStoreConnectionFactory 
 
     private TransactionManager _txMgr;
 
-    @SuppressWarnings("unchecked")
     public DbConfStoreConnectionFactory(DataSource ds, boolean createDatamodel, String txFactoryClassName) {
+    	this(ds, createDatamodel, txFactoryClassName, new Properties());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public DbConfStoreConnectionFactory(DataSource ds, boolean createDatamodel, String txFactoryClassName, Properties props) {
         _ds = ds;
         initTxMgr(txFactoryClassName);
 
@@ -56,9 +62,11 @@ public class DbConfStoreConnectionFactory implements ConfStoreConnectionFactory 
         propMap.put("openjpa.FlushBeforeQueries", "false");
         propMap.put("openjpa.FetchBatchSize", 1000);
         propMap.put("openjpa.jdbc.TransactionIsolation", "read-committed");
-
+        for (Entry<Object, Object> e : props.entrySet()) {
+        	propMap.put(e.getKey().toString(), e.getValue());
+        }
+         
         if (createDatamodel) propMap.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=false)");
-
         _emf = Persistence.createEntityManagerFactory("ode-store", propMap);
     }
 
